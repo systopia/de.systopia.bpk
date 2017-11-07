@@ -1,0 +1,51 @@
+{
+  "_lookup": ["name"],
+  "_translate": ["title"],
+  "name": "bpk_status",
+  "title": "bPK Status List",
+  "is_reserved": "0",
+  "is_active": "1",
+  "_values": [
+    {
+      "_lookup": ["value"],
+      "_translate": ["label"],
+      "label": "Ok",
+      "value": "OK",
+      "name": "OK",
+      "filter": "0",
+      "is_reserved": "0",
+      "is_active": "1"
+    },
+    {
+      "_lookup": ["value"],
+      "_translate": ["label"],
+      "label": "n/a",
+      "value": "0",
+      "name": "NO",
+      "filter": "0",
+      "is_default": "1",
+      "is_reserved": "0",
+      "is_active": "1"
+    },
+    {
+      "_lookup": ["value"],
+      "_translate": ["label"],
+      "label": "Es konnte keine Person im ZMR und/oder ERnP gefunden werden.",
+      "value": "F230",
+      "name": "F230",
+      "filter": "0",
+      "is_reserved": "0",
+      "is_active": "1"
+    },
+    {
+      "_lookup": ["value"],
+      "_translate": ["label"],
+      "label": "Es wurden zu viele Personen im ZMR und/oder ERnP gefunden, so dass das Ergebnis nicht eindeutig war. Mit weiteren Suchkriterien kann das Ergebnis noch eindeutig gemacht werden.",
+      "value": "F231",
+      "name": "F231",
+      "filter": "0",
+      "is_reserved": "0",
+      "is_active": "1"
+    }
+  ]
+}
