@@ -30,9 +30,35 @@ class CRM_Bpk_Config {
    */
   public static function singleton() {
     if (self::$singleton === NULL) {
-      self::$singleton = new CRM_Sqltasks_Config();
+      self::$singleton = new CRM_Bpk_Config();
     }
     return self::$singleton;
+  }
+
+  /**
+   * get bPK settings
+   *
+   * @return array
+   */
+  public function getSettings() {
+    $settings = CRM_Core_BAO_Setting::getItem('de.systopia.bpk', 'bpk_settings');
+    if (!$settings) {
+      // TODO: defaults
+      return array(
+        'limit' => 200,
+        'key'   => 'enter key here');
+    } else {
+      return $settings;
+    }
+  }
+
+  /**
+   * set bPK settings
+   *
+   * @param $settings array
+   */
+  public function setSettings($settings) {
+    CRM_Core_BAO_Setting::setItem($settings, 'de.systopia.bpk', 'bpk_settings');
   }
 
   /**

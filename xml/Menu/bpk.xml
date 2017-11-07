@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<menu>
+  <item>
+    <path>civicrm/admin/bpk/settings</path>
+    <page_callback>CRM_Bpk_Form_Settings</page_callback>
+    <title>bPK Settings</title>
+    <access_arguments>administer CiviCRM</access_arguments>
+    <adminGroup>CiviContribute</adminGroup>
+    <icon>admin/import_export_map.png</icon>
+  </item>
+</menu>
