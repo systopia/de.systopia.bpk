@@ -72,8 +72,11 @@ class CRM_Bpk_Lookup {
 
     } else {
       // generate WHERE clause
+      // pba: bpk queries must always have first_name, last_name and birth_date
       // TODO: implement selection criteria
       $where_clauses_OR[] = "contact.birth_date IS NOT NULL";
+      $where_clauses_OR[] = "contact.first_name IS NOT NULL";
+      $where_clauses_OR[] = "contact.last_name IS NOT NULL";
     }
 
     $table_name = $this->config->getTableName();
