@@ -14,17 +14,27 @@
 +-------------------------------------------------------*}
 
 <div class="crm-section bpk">
-  <div class="crm-section">
-    <div class="label">{$form.limit.label}</div>
-    <div class="content">{$form.limit.html}</div>
+    <div class="crm-section">
+        <div class="label">{$form.limit.label}</div>
+        <div class="content">{$form.limit.html}</div>
     <div class="clear"></div>
-  </div>
+    </div>
 
-  <div class="crm-section">
-    <div class="label">{$form.key.label}</div>
-    <div class="content">{$form.key.html}</div>
-    <div class="clear"></div>
-  </div>
+    <div class="crm-section">
+        <div class="label">{$form.key.label}</div>
+        <div class="content">{$form.key.html}</div>
+        <div class="clear"></div>
+    </div>
+</div>
+
+<hr>
+
+<div>
+    <div class="crm-section">
+        <div class="label">{$form.SOAPNamespace.label}</div>
+        <div class="content">{$form.SOAPNamespace.html}</div>
+        <div class="clear"></div>
+    </div>
 </div>
 
 

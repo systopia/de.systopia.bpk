@@ -40,6 +40,13 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
       FALSE
     );
 
+    $this->add(
+        'text',
+        'SOAPNamespace',
+      E::ts('SOAP-Namespace'),
+      FALSE
+    );
+
 
     $this->addButtons(array(
       array(
