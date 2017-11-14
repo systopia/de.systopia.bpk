@@ -200,7 +200,7 @@
     {
       "_lookup": ["value"],
       "_translate": ["label"],
-      "label": "Diese Meldung kommt bei ungültigen Zeichen im Request. Grundsätzlich unterstützt das SZR, ZMR und ERnP den Zeichensatz UTF-8. Allerdings sind nicht alle Zeichen daraus erlaubt. Wird eines dieser Zeichen zum Beispiel im Familienname mitgesendet, kommt diese Meldung",
+      "label": "Diese Meldung kommt bei ungültigen Zeichen im Request. Norm: UTF-8. Nicht alle Zeichen erlaubt in zB. Familienname.",
       "value": "F438",
       "name": "F438",
       "filter": "0",
