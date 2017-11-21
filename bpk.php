@@ -73,6 +73,7 @@ function bpk_civicrm_enable() {
 
   require_once 'CRM/Bpk/CustomData.php';
   $customData = new CRM_Bpk_CustomData('de.systopia.bpk');
+  $customData->syncOptionGroup(__DIR__ . '/resources/bpk_error_code_option_group.json');
   $customData->syncOptionGroup(__DIR__ . '/resources/bpk_status_option_group.json');
   $customData->syncCustomGroup(__DIR__ . '/resources/bpk_custom_group.json');
 }

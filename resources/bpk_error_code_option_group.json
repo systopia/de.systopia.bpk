@@ -1,0 +1,271 @@
+{
+  "_lookup": ["name"],
+  "_translate": ["title"],
+  "name": "bpk_error_code",
+  "title": "bPK Error Code List",
+  "is_reserved": "0",
+  "is_active": "1",
+  "_values": [
+    {
+      "_lookup": ["value"],
+      "_translate": ["label"],
+      "label": "n_a",
+      "value": "0",
+      "name": "n_a",
+      "filter": "0",
+      "is_default": "1",
+      "is_reserved": "0",
+      "is_active": "1"
+    },
+    {
+      "_lookup": ["value"],
+      "_translate": ["label"],
+      "label": "Es konnte keine Person im ZMR und/oder ERnP gefunden werden.",
+      "value": "F230",
+      "name": "F230",
+      "filter": "0",
+      "is_reserved": "0",
+      "is_active": "1"
+    },
+    {
+      "_lookup": ["value"],
+      "_translate": ["label"],
+      "label": "Es wurden zu viele Personen im ZMR und/oder ERnP gefunden, so dass das Ergebnis nicht eindeutig war. Mit weiteren Suchkriterien kann das Ergebnis noch eindeutig gemacht werden.",
+      "value": "F231",
+      "name": "F231",
+      "filter": "0",
+      "is_reserved": "0",
+      "is_active": "1"
+    },
+    {
+      "_lookup": ["value"],
+      "_translate": ["label"],
+      "label": "Es wurden zu viele Personen im ZMR und/oder ERnP gefunden, so dass das Ergebnis nicht eindeutig war. Mit weiteren Suchkriterien kann das Ergebnis noch eindeutig gemacht werden. (>5 Treffer)",
+      "value": "F233",
+      "name": "F233",
+      "filter": "0",
+      "is_reserved": "0",
+      "is_active": "1"
+    },
+    {
+      "_lookup": ["value"],
+      "_translate": ["label"],
+      "label": "Session-ID wurde nicht mit gesendet. Für diese Funktion muss die Session-ID, die in einem vorausgegangen Request geantwortet wurde mit gesendet werden.",
+      "value": "F401",
+      "name": "F401",
+      "filter": "0",
+      "is_reserved": "0",
+      "is_active": "1"
+    },
+    {
+      "_lookup": ["value"],
+      "_translate": ["label"],
+      "label": "Session-ID wurde nicht mit gesendet. Für diese Funktion muss die Session-ID, die in einem vorausgegangen Request geantwortet wurde mit gesendet werden.",
+      "value": "F402",
+      "name": "F402",
+      "filter": "0",
+      "is_reserved": "0",
+      "is_active": "1"
+    },
+    {
+      "_lookup": ["value"],
+      "_translate": ["label"],
+      "label": "Mit gesendete Session-ID konnte nicht zugeordnet werden. Es sollte die Session-ID geprüft werden. Ist diese zu alt, muss erneut abgefragt werden.",
+      "value": "F403",
+      "name": "F403",
+      "filter": "0",
+      "is_reserved": "0",
+      "is_active": "1"
+    },
+    {
+      "_lookup": ["value"],
+      "_translate": ["label"],
+      "label": "Die Organisation mit dem angegebenen Verwaltungskennzeichen (VKZ) ist nicht für den angegebenen Bereich zur Errechnung von bPK berechtigt.",
+      "value": "F404",
+      "name": "F404",
+      "filter": "0",
+      "is_reserved": "0",
+      "is_active": "1"
+    },
+    {
+      "_lookup": ["value"],
+      "_translate": ["label"],
+      "label": "Das Verwaltungskennzeichen (VKZ) oder der Bereich für die bPK fehlt. Beides sind Pflichtfelder.",
+      "value": "F405",
+      "name": "F405",
+      "filter": "0",
+      "is_reserved": "0",
+      "is_active": "1"
+    },
+    {
+      "_lookup": ["value"],
+      "_translate": ["label"],
+      "label": "Es wird ein Behördenkennzeichen benötigt.",
+      "value": "F407",
+      "name": "F407",
+      "filter": "0",
+      "is_reserved": "0",
+      "is_active": "1"
+    },
+    {
+      "_lookup": ["value"],
+      "_translate": ["label"],
+      "label": "Ein technische Fehler ist beim Speichern der Session-ID aufgetreten.",
+      "value": "F408",
+      "name": "F408",
+      "filter": "0",
+      "is_reserved": "0",
+      "is_active": "1"
+    },
+    {
+      "_lookup": ["value"],
+      "_translate": ["label"],
+      "label": "Ihr VKZ und Ihre ParticipantID dürfen für diesen Bereich keine BPKs berechnen",
+      "value": "F410",
+      "name": "F410",
+      "filter": "0",
+      "is_reserved": "0",
+      "is_active": "1"
+    },
+    {
+      "_lookup": ["value"],
+      "_translate": ["label"],
+      "label": "Die Bereiche AS, ZP-TD und GH-GD dürfen nicht unverschlüsselt berechnet werden",
+      "value": "F411",
+      "name": "F411",
+      "filter": "0",
+      "is_reserved": "0",
+      "is_active": "1"
+    },
+    {
+      "_lookup": ["value"],
+      "_translate": ["label"],
+      "label": "Für eine Personenabfrage müssen neben Familienname und Vorname zumindest ein weiteres Kriterium angegeben werden.",
+      "value": "F430",
+      "name": "F430",
+      "filter": "0",
+      "is_reserved": "0",
+      "is_active": "1"
+    },
+    {
+      "_lookup": ["value"],
+      "_translate": ["label"],
+      "label": "Das eingemeldete Geburtsdatum ist ungültig. Siehe Kapitel 3.1.1.",
+      "value": "F431",
+      "name": "F431",
+      "filter": "0",
+      "is_reserved": "0",
+      "is_active": "1"
+    },
+    {
+      "_lookup": ["value"],
+      "_translate": ["label"],
+      "label": "Die Bereichsangabe ist ungültig. Sie muss immer mit vollständigem Präfix erfolgen. zum Beispiel urn:publicid:gv.at:cdid+SA um eine bPK für den Bereich SA zu erhalten.",
+      "value": "F432",
+      "name": "F432",
+      "filter": "0",
+      "is_reserved": "0",
+      "is_active": "1"
+    },
+    {
+      "_lookup": ["value"],
+      "_translate": ["label"],
+      "label": "Ungültige Angabe von einem Geschlecht. Gültige Werte sind male und female.",
+      "value": "F435",
+      "name": "F435",
+      "filter": "0",
+      "is_reserved": "0",
+      "is_active": "1"
+    },
+    {
+      "_lookup": ["value"],
+      "_translate": ["label"],
+      "label": "Die Bereichsangabe ist ungültig. Siehe Kapitel 0",
+      "value": "F436",
+      "name": "F436",
+      "filter": "0",
+      "is_reserved": "0",
+      "is_active": "1"
+    },
+    {
+      "_lookup": ["value"],
+      "_translate": ["label"],
+      "label": "Diese Meldung kommt bei ungültigen Zeichen im Request. Norm: UTF-8. Nicht alle Zeichen erlaubt in zB. Familienname.",
+      "value": "F438",
+      "name": "F438",
+      "filter": "0",
+      "is_reserved": "0",
+      "is_active": "1"
+    },
+    {
+      "_lookup": ["value"],
+      "_translate": ["label"],
+      "label": "Es kann nicht mit der bPK für einen Bereich gesucht werden, um die bPK einer Person zu einem anderen Bereich zu erhalten. Fragen Sie dazu verschlüsselte bPK ab.",
+      "value": "F439",
+      "name": "F439",
+      "filter": "0",
+      "is_reserved": "0",
+      "is_active": "1"
+    },
+    {
+      "_lookup": ["value"],
+      "_translate": ["label"],
+      "label": "Das XML-Element Identification muss mit Value und Type gesendet werden, da es sonst als ungültig angesehen wird.",
+      "value": "F441",
+      "name": "F441",
+      "filter": "0",
+      "is_reserved": "0",
+      "is_active": "1"
+    },
+    {
+      "_lookup": ["value"],
+      "_translate": ["label"],
+      "label": "Das gesuchte Geburtsdatum liegt in der Zukunft",
+      "value": "F450",
+      "name": "F450",
+      "filter": "0",
+      "is_reserved": "0",
+      "is_active": "1"
+    },
+    {
+      "_lookup": ["value"],
+      "_translate": ["label"],
+      "label": "Dies ist ein Portalfehler: Zertifikatsüberprüfung fehlgeschlagen (z.B. ungültige Root-CA, Zertifikat am Portal abgelaufen oder nicht registriert",
+      "value": "F490",
+      "name": "F490",
+      "filter": "0",
+      "is_reserved": "0",
+      "is_active": "1"
+    },
+    {
+      "_lookup": ["value"],
+      "_translate": ["label"],
+      "label": "Technische Fehler. Nach einiger Zeit erneut versuchen. Sollte die Meldung weiter bestehen, SZR-Support kontaktieren.",
+      "value": "F501",
+      "name": "F501",
+      "filter": "0",
+      "is_reserved": "0",
+      "is_active": "1"
+    },
+    {
+      "_lookup": ["value"],
+      "_translate": ["label"],
+      "label": "Technische Fehler. Nach einiger Zeit erneut versuchen. Sollte die Meldung weiter bestehen, SZR-Support kontaktieren.",
+      "value": "F502",
+      "name": "F502",
+      "filter": "0",
+      "is_reserved": "0",
+      "is_active": "1"
+    },
+    {
+      "_lookup": ["value"],
+      "_translate": ["label"],
+      "label": "Technische Fehler. Nach einiger Zeit erneut versuchen. Sollte die Meldung weiter bestehen, SZR-Support kontaktieren.",
+      "value": "F504",
+      "name": "F504",
+      "filter": "0",
+      "is_reserved": "0",
+      "is_active": "1"
+    }
+  ]
+}
