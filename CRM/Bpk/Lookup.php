@@ -15,7 +15,7 @@
 +--------------------------------------------------------*/
 
 
-class CRM_Bpk_Lookup {
+abstract class CRM_Bpk_Lookup {
 
   protected $success = 0;
   protected $failed  = 0;
@@ -91,7 +91,7 @@ class CRM_Bpk_Lookup {
              contact.birth_date AS birth_date,
             FROM civicrm_contact contact
             LEFT JOIN {$table_name} bpk_group ON bpk_group.entity_id = contact.id
-            WHERE (({$where_clause}))
+            WHERE (({$where_sql}))
             AND bpk_group.{$field_name} IS NULL
             AND contact.is_deleted = 0
             AND contact.contact_type = 'Individual'
@@ -113,14 +113,34 @@ class CRM_Bpk_Lookup {
     }
   }
 
-  protected function getBpkResult($contact) {
-    // TODO: SOAP lookup
-    return array(
-      'bPK' => '',
-      'error_code' => '',
-      'contact_id' => $contact->contact_id,
-    );
+  /**
+   * @param $contact
+   *
+   * @return mixed result, either array with error code,
+   *         or the contact information with the bpk and v_bpk
+   */
+  protected abstract function getBpkResult($contact);
+
+  /*
+   * get a set of contact; limit is 200/min
+   *
+   * Request shall only be executed on contact at a time though
+   */
+  protected function getBpkMultiResult($contacts) {
+    // todo: implement as loop, but override in subclass
+    foreach ($contacts as $contact) {
+      $result = $this->getBpkResult($contact);
+    }
   }
+
+//  protected function getBpkResult($contact) {
+//    // TODO: SOAP lookup
+//    return array(
+//      'bPK' => '',
+//      'error_code' => '',
+//      'contact_id' => $contact->contact_id,
+//    );
+//  }
 
   /**
    * Store result in contact
