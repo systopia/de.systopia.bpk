@@ -37,9 +37,27 @@
     },{
       "_lookup": ["value"],
       "_translate": ["label"],
-      "label": "failed",
+      "label": "failed - no match",
       "value": "4",
-      "name": "failed",
+      "name": "failed_no_match",
+      "filter": "0",
+      "is_reserved": "0",
+      "is_active": "1"
+    },{
+      "_lookup": ["value"],
+      "_translate": ["label"],
+      "label": "failed - error",
+      "value": "5",
+      "name": "failed_error",
+      "filter": "0",
+      "is_reserved": "0",
+      "is_active": "1"
+    },{
+      "_lookup": ["value"],
+      "_translate": ["label"],
+      "label": "failed - ambiguous",
+      "value": "6",
+      "name": "failed_ambiguous",
       "filter": "0",
       "is_reserved": "0",
       "is_active": "1"
