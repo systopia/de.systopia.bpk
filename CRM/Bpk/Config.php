@@ -52,6 +52,20 @@ class CRM_Bpk_Config {
     }
   }
 
+  public function getSoapHeaderSettings() {
+    $settings = CRM_Core_BAO_Setting::getItem('de.systopia.bpk', 'bpk_settings');
+    if (!$settings) {
+      return array();
+    }
+    $settings_elements = CRM_Bpk_Form_Settings::getSoapHeaderSettingsParameters();
+    foreach ($settings as $key => $value) {
+      if (!in_array($key, $settings_elements)) {
+        unset($settings[$key]);
+      }
+    }
+    return $settings;
+  }
+
   /**
    * set bPK settings
    *
