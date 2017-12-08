@@ -22,11 +22,70 @@
  */
 class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
 
+  private $wsdl;
+  private $ns;
+  private $location;
+  private $options;
+  private $soapClient;
+
+  // TODO: debug last request/response
+//REQUEST :
+//" . htmlspecialchars($client->__getLastRequest()) . "
+//");
+//   //echo("
+//RESPONSE:
+//" .htmlspecialchars($client->__getLastResponse()) . "
+//");
+
+  /**
+   * CRM_Bpk_SoapLookup constructor.
+   *
+   * @param $params
+   */
+  protected function __construct($params) {
+    parent::__construct($params);
+    // TODO: initialize SOAP controller
+    $this->wsdl = "__DIR__/resources/soap/SZR.WSDL";
+    $this->initializeSoapClient();
+  }
+
+  private function initializeSoapClient() {
+    // needed? disable wsdl cache
+    // ini_set("soap.wsdl_cache_enabled", "0");
+
+    // FixMe: Need uri/location here??
+    // TODO: Exception Handling
+    $this->soapClient = new SoapClient($this->wsdl, $this->options);
+    $this->createSoapHeader();
+  }
+
+  /**
+   * create SOAP Header from $config data
+   */
+  private function createSoapHeader() {
+    // FixMe: currently static information; --> the information here is somewhat copied from the example
+    // TODO:  use configuration from $config class (configured via setting-form)
+    $headerBody = 
+    );
+    $soap_header = new SOAPHeader($this->ns, 'requestHeader', $headerBody);
+    $this->soapClient->__setSoapHeaders($soap_header);
+  }
+
+  /**
+   * Debug function to print available soap functions to error log
+   */
+  public function debugSOAPFunctions() {
+    $functions = $this->soapClient->__getFunctions();
+    // TODO: Maybe don't do this in error log, might be cut off
+    error_log("Debug, soap functions: " . json_encode($functions));
+  }
+
   /**
    * @param $contact
    */
   public function getBpkResult($contact) {
     // TODO: setup a single soap request
+
   }
 
   /**
