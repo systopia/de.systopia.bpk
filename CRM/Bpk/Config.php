@@ -35,7 +35,7 @@ class CRM_Bpk_Config {
     return self::$singleton;
   }
 
-  /**
+    /**
    * get bPK settings
    *
    * @return array

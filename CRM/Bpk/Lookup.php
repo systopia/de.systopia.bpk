@@ -32,8 +32,8 @@ abstract class CRM_Bpk_Lookup {
    *
    * @return array with results: ['success' => <count>, 'failed' => <count>]
    */
-  public static function doLookup($params) {
-    $runner = new CRM_Bpk_Lookup();
+  public static function doSoapLookup($params) {
+    $runner = new CRM_Bpk_SoapLookup();
 
     // step 1: select eligible contacts
     $select_sql = self::createSelectionQuery();
