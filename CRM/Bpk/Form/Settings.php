@@ -49,6 +49,13 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
 
     $this->add(
       'text',
+      'soap_header_participantId',
+      E::ts('SOAP Header participantId'),
+      FALSE
+    );
+
+    $this->add(
+      'text',
       'soap_header_userId',
       E::ts('SOAP Header UserId'),
       FALSE
@@ -105,6 +112,7 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
         'limit',
         'key',
         'soap_header_namespace',
+        'soap_header_participantId',
         'soap_header_userId',
         'soap_header_cn',
         'soap_header_gvOuId',
@@ -112,8 +120,19 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
       );
   }
 
+  public static function getSoapHeaderSettingsParameters() {
+    return array(
+      'soap_header_namespace',
+      'soap_header_participantId',
+      'soap_header_userId',
+      'soap_header_cn',
+      'soap_header_gvOuId',
+      'soap_header_gvGid'
+    );
+  }
+
   /**
-   * 
+   * Process Form Data
    */
   public function postProcess() {
     $config = CRM_Bpk_Config::singleton();

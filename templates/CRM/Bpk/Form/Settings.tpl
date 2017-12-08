@@ -40,6 +40,11 @@
         <div class="clear"></div>
     </div>
     <div class="crm-section">
+        <div class="label">{$form.soap_header_participantId.label}</div>
+        <div class="content">{$form.soap_header_participantId.html}</div>
+        <div class="clear"></div>
+    </div>
+    <div class="crm-section">
         <div class="label">{$form.soap_header_userId.label}</div>
         <div class="content">{$form.soap_header_userId.html}</div>
         <div class="clear"></div>
