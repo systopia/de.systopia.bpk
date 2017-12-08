@@ -30,9 +30,33 @@
 <hr>
 
 <div>
+    <p>SOAP Configuration</p>
+</div>
+
+<div>
     <div class="crm-section">
-        <div class="label">{$form.SOAPNamespace.label}</div>
-        <div class="content">{$form.SOAPNamespace.html}</div>
+        <div class="label">{$form.soap_header_namespace.label}</div>
+        <div class="content">{$form.soap_header_namespace.html}</div>
+        <div class="clear"></div>
+    </div>
+    <div class="crm-section">
+        <div class="label">{$form.soap_header_userId.label}</div>
+        <div class="content">{$form.soap_header_userId.html}</div>
+        <div class="clear"></div>
+    </div>
+    <div class="crm-section">
+        <div class="label">{$form.soap_header_cn.label}</div>
+        <div class="content">{$form.soap_header_cn.html}</div>
+        <div class="clear"></div>
+    </div>
+    <div class="crm-section">
+        <div class="label">{$form.soap_header_gvOuId.label}</div>
+        <div class="content">{$form.soap_header_gvOuId.html}</div>
+        <div class="clear"></div>
+    </div>
+    <div class="crm-section">
+        <div class="label">{$form.soap_header_gvGid.label}</div>
+        <div class="content">{$form.soap_header_gvGid.html}</div>
         <div class="clear"></div>
     </div>
 </div>

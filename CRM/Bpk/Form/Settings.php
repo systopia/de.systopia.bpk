@@ -42,8 +42,36 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
 
     $this->add(
         'text',
-        'SOAPNamespace',
+        'soap_header_namespace',
       E::ts('SOAP-Namespace'),
+      FALSE
+    );
+
+    $this->add(
+      'text',
+      'soap_header_userId',
+      E::ts('SOAP Header UserId'),
+      FALSE
+    );
+
+    $this->add(
+      'text',
+      'soap_header_cn',
+      E::ts('SOAP Header cn'),
+      FALSE
+    );
+
+    $this->add(
+      'text',
+      'soap_header_gvOuId',
+      E::ts('SOAP Header gvOuId'),
+      FALSE
+    );
+
+    $this->add(
+      'text',
+      'soap_header_gvGid',
+      E::ts('SOAP Header gvGid'),
       FALSE
     );
 
@@ -67,12 +95,32 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
     return $config->getSettings();
   }
 
+  /**
+   * get the elements of the form
+   * used as a filter for the values array from post Process
+   * @return array
+   */
+  protected function getSettingsInForm() {
+      return array(
+        'limit',
+        'key',
+        'soap_header_namespace',
+        'soap_header_userId',
+        'soap_header_cn',
+        'soap_header_gvOuId',
+        'soap_header_gvGid'
+      );
+  }
+
+  /**
+   * 
+   */
   public function postProcess() {
     $config = CRM_Bpk_Config::singleton();
     $values = $this->exportValues();
 
     $settings = $config->getSettings();
-    $settings_in_form = array('limit', 'key');
+    $settings_in_form = $this->getSettingsInForm();
     foreach ($settings_in_form as $name) {
       if (isset($values[$name])) {
         $settings[$name] = $values[$name];
