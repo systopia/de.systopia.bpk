@@ -63,10 +63,27 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
    * create SOAP Header from $config data
    */
   private function createSoapHeader() {
-    // FixMe: currently static information; --> the information here is somewhat copied from the example
-    // TODO:  use configuration from $config class (configured via setting-form)
-    $headerBody = 
+    $config = CRM_Bpk_Config::singleton();
+    $soapHeaderParameters = $config->getSoapHeaderSettings();
+
+    $headerBody = array(
+      'authenticate' => array(
+        'participantId'     => $soapHeaderParameters['soap_header_participantId'],
+        'pvpPrincipalType'  => array(
+          'userId'      => $soapHeaderParameters['soap_header_userId'],
+          'cn'          => $soapHeaderParameters['soap_header_cn'],
+          'gvOuId'      => $soapHeaderParameters['soap_header_gvOuId'],
+          'gvGid'       => $soapHeaderParameters['soap_header_gvGid'],
+          'ou'          => $soapHeaderParameters['soap_header_ou'],
+          'gvSecClass'  => '2',  // TODO ?? copied from example
+        )
+      ),
+      'authorize' => array(
+        'role' => array('value' => 'szr-bpk-abfrage'),
+      )
     );
+    // TODO create SOAP Header from config Object
+
     $soap_header = new SOAPHeader($this->ns, 'requestHeader', $headerBody);
     $this->soapClient->__setSoapHeaders($soap_header);
   }

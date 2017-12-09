@@ -64,6 +64,11 @@
         <div class="content">{$form.soap_header_gvGid.html}</div>
         <div class="clear"></div>
     </div>
+    <div class="crm-section">
+        <div class="label">{$form.soap_header_ou.label}</div>
+        <div class="content">{$form.soap_header_ou.html}</div>
+        <div class="clear"></div>
+    </div>
 </div>
 
 

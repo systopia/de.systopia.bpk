@@ -82,6 +82,13 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
       FALSE
     );
 
+    $this->add(
+      'text',
+      'soap_header_ou',
+      E::ts('SOAP Header ou'),
+      FALSE
+    );
+
 
     $this->addButtons(array(
       array(
@@ -127,7 +134,8 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
       'soap_header_userId',
       'soap_header_cn',
       'soap_header_gvOuId',
-      'soap_header_gvGid'
+      'soap_header_gvGid',
+      'soap_header_ou',
     );
   }
 
