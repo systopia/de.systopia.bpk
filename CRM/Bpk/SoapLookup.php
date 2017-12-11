@@ -50,7 +50,8 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
   }
 
   private function initializeSoapClient() {
-    // needed? disable wsdl cache
+    // needed? disable wsdl cache, check that, maybe make this configurable
+    //                             depending on local config
     // ini_set("soap.wsdl_cache_enabled", "0");
 
     // FixMe: Need uri/location here??
@@ -82,7 +83,6 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
         'role' => array('value' => 'szr-bpk-abfrage'),
       )
     );
-    // TODO create SOAP Header from config Object
 
     $soap_header = new SOAPHeader($this->ns, 'requestHeader', $headerBody);
     $this->soapClient->__setSoapHeaders($soap_header);
@@ -93,7 +93,7 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
    */
   public function debugSOAPFunctions() {
     $functions = $this->soapClient->__getFunctions();
-    // TODO: Maybe don't do this in error log, might be cut off
+    // TODO: Maybe don't do this in error log, might be cut off --> Move to CiviCRM Log
     error_log("Debug, soap functions: " . json_encode($functions));
   }
 
@@ -102,7 +102,30 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
    */
   public function getBpkResult($contact) {
     // TODO: setup a single soap request
-
+    if (!isset($contact['first_name'] || !isset($contact['last_name']) || !isset($contact['birth_date'])) {
+      // TODO: Abort transaction --> show eror message
+      return;
+    }
+    $soap_request_data = array(
+      'PersonInfo' => array(
+        'Person' => array(
+          'Name' => array(
+            'GivenName' = $contact['first_name'],
+            'FamilyName' => $contact['last_name'],
+          ),
+          // TODO: consider bday format
+          'DateOfBirth' => $contact['birth_date'],
+        )
+      ),
+      // TODO --> get values from config class here
+      'Bereichskennung' => 'woot??',
+      'VKZ' => 'vkz',
+      'target' => array(
+        'BereichsKennung' => 'urn:publicid:gv.at:cdid+SA',
+        'VKZ' => 'BMF',
+      )
+    );
+    // TODO: execute soap request now
   }
 
   /**
