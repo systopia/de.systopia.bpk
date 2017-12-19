@@ -43,10 +43,46 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
    * @param $params
    */
   protected function __construct($params) {
-    parent::__construct($params);
+    if (!isset($params['contact_id'])) {
+      // Shouldn't be possible
+      return NULL;
+    }
+    $contact_details = $this->getPersonData($params['contact_id']);
+    parent::__construct($contact_details);
     // TODO: initialize SOAP controller
-    $this->wsdl = "__DIR__/resources/soap/SZR.WSDL";
+    $this->wsdl = dirname(__DIR__) . DIRECTORY_SEPARATOR . "../resources/soap/SZR.WSDL";
     $this->initializeSoapClient();
+  }
+
+  /**
+   * @param $contact_id
+   * @param array $options
+   *
+   * @throws \CiviCRM_API3_Exception
+   * @throws \Exception
+   *
+   * @return contact parameters; min first/last_name, birthdate
+   */
+  // FixMe: default value for contact_id is for testing purposes
+  private function getPersonData($contact_id = '2', $options = array()) {
+    $result = civicrm_api3('Contact', 'getsingle', array(
+      'sequential' => 1,
+      'id' => $contact_id,
+    ));
+    if (isset($result['is_error'])) {
+      throw new Exception("Couldn't find Contact with id {$contact_id}. Aborting lookup");
+    }
+    $bpk_parameters = array(
+      'first_name'  => $result['first_name'],
+      'last_name'   => $result['last_name'],
+      'birth_date'  => $result['birth_date'],
+    );
+    foreach ($options as $key => $opt) {
+      if (isset($result[$opt])) {
+        $bpk_parameters[$opt] = $result[$opt];
+      }
+    }
+    return $bpk_parameters;
   }
 
   private function initializeSoapClient() {
@@ -54,9 +90,14 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
     //                             depending on local config
     // ini_set("soap.wsdl_cache_enabled", "0");
 
+    CRM_Core_Error::debug("INITIALIZE SOAP Client: " . $this->wsdl);
+    CRM_Core_Error::debug("SOAP Client Options: " . json_encode($this->options));
+
+
     // FixMe: Need uri/location here??
     // TODO: Exception Handling
-    $this->soapClient = new SoapClient($this->wsdl, $this->options);
+//    $this->soapClient = new SoapClient($this->wsdl, $this->options);
+    $this->soapClient = new SoapClient($this->wsdl);
     $this->createSoapHeader();
   }
 
@@ -95,22 +136,23 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
     $functions = $this->soapClient->__getFunctions();
     // TODO: Maybe don't do this in error log, might be cut off --> Move to CiviCRM Log
     error_log("Debug, soap functions: " . json_encode($functions));
+    CRM_Core_Error::debug("DEBUG: " . json_encode($functions));
   }
 
   /**
-   * @param $contact
+   * @param $contact array('first_name', 'last_name', 'birth_date')
    */
   public function getBpkResult($contact) {
     // TODO: setup a single soap request
-    if (!isset($contact['first_name'] || !isset($contact['last_name']) || !isset($contact['birth_date'])) {
-      // TODO: Abort transaction --> show eror message
+    if (!isset($contact['first_name']) || !isset($contact['last_name']) || !isset($contact['birth_date'])) {
+      CRM_Core_Error::debug("Necessary Attributes aren't in array. Aborting transaction");
       return;
     }
     $soap_request_data = array(
       'PersonInfo' => array(
         'Person' => array(
           'Name' => array(
-            'GivenName' = $contact['first_name'],
+            'GivenName' => $contact['first_name'],
             'FamilyName' => $contact['last_name'],
           ),
           // TODO: consider bday format
@@ -126,6 +168,7 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
       )
     );
     // TODO: execute soap request now
+
   }
 
   /**

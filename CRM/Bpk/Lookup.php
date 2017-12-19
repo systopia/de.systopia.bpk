@@ -22,7 +22,8 @@ abstract class CRM_Bpk_Lookup {
   protected $params  = NULL;
   protected $config  = NULL;
 
-  protected function __construct($params) {
+  protected function __construct($params = NULL) {
+    // TODO: if
     $this->params = $params;
     $this->config = CRM_Bpk_Config::singleton();
   }
@@ -36,10 +37,10 @@ abstract class CRM_Bpk_Lookup {
     $runner = new CRM_Bpk_SoapLookup();
 
     // step 1: select eligible contacts
-    $select_sql = self::createSelectionQuery();
+    $select_sql = $runner->createSelectionQuery();
 
     // step 2: resolve
-    self::executeLookupFor($select_sql);
+    $runner->executeLookupFor($select_sql);
 
     return $runner->getResult();
   }
@@ -104,6 +105,13 @@ abstract class CRM_Bpk_Lookup {
    *
    */
   protected function executeLookupFor($sql) {
+    // FixME: Debug Code
+    $data = $this->static_lookup_Data();
+    $result = $this->getBpkResult($data);
+    // TODO: Output to CiviCRM log here
+    CRM_Core_Error::debug(json_encode($result));
+    return;
+
     $cursor = CRM_Core_DAO::executeQuery($sql);
     while ($cursor->fetch()) {
       // $cursor->first_name, ...
@@ -111,6 +119,19 @@ abstract class CRM_Bpk_Lookup {
       $result = $this->getBpkResult($cursor);
       $this->storeResult($result);
     }
+  }
+
+  /**
+   * Test data is taken from ZMR Sample Data
+   * @return array
+   */
+  protected function static_lookup_Data() {
+    $static_data = array(
+      'first_name' => 'XXXTest',
+      'last_name'  => 'XXXSZR',
+      'birth_date' => '1960-04-04',
+    );
+    return $static_data;
   }
 
   /**
