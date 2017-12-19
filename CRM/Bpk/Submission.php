@@ -113,7 +113,9 @@ class CRM_Bpk_Submission {
     // write XML header
     $writer = new XMLWriter();
     $writer->openURI("php://output");
+    $writer->startDocument();
     $writer->startElement("SonderausgabenUebermittlung");
+    $writer->writeAttribute('xmlns', 'https://finanzonline.bmf.gv.at/fon/ws/uebermittlungSonderausgaben');
 
     // WRITE Info_Daten BLOCK
     $writer->startElement("Info_Daten");
@@ -164,6 +166,7 @@ class CRM_Bpk_Submission {
     }
 
     $writer->endElement(); // end SonderausgabenUebermittlung
+    $writer->endDocument();
     $writer->flush();
 
     // we're done, no return
