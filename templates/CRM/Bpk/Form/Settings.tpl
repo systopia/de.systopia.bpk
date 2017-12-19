@@ -13,27 +13,36 @@
 | written permission from the original author(s).        |
 +-------------------------------------------------------*}
 
-<div class="crm-section bpk">
+<h3>{ts domain='de.systopia.bpk'}Tax Submission{/ts}</h3>
+
+<div class="crm-section bpk bpk-submission">
+    <div class="crm-section">
+        <div class="label">{$form.fastnr.label}</div>
+        <div class="content">{$form.fastnr.html}</div>
+        <div class="clear"></div>
+    </div>
+
+    <div class="crm-section">
+        <div class="label">{$form.fasttype.label}</div>
+        <div class="content">{$form.fasttype.html}</div>
+        <div class="clear"></div>
+    </div>
+</div>
+
+<h3>{ts domain='de.systopia.bpk'}Automatic BPK Lookup{/ts}</h3>
+
+<div class="crm-section bpk bpk-lookup">
     <div class="crm-section">
         <div class="label">{$form.limit.label}</div>
         <div class="content">{$form.limit.html}</div>
-    <div class="clear"></div>
+        <div class="clear"></div>
     </div>
-
     <div class="crm-section">
         <div class="label">{$form.key.label}</div>
         <div class="content">{$form.key.html}</div>
         <div class="clear"></div>
     </div>
-</div>
 
-<hr>
-
-<div>
-    <p>SOAP Configuration</p>
-</div>
-
-<div>
     <div class="crm-section">
         <div class="label">{$form.soap_header_namespace.label}</div>
         <div class="content">{$form.soap_header_namespace.html}</div>

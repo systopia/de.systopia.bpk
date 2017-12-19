@@ -35,7 +35,7 @@ class CRM_Bpk_Config {
     return self::$singleton;
   }
 
-    /**
+  /**
    * get bPK settings
    *
    * @return array
@@ -112,15 +112,15 @@ class CRM_Bpk_Config {
    * The organisation's uniqe "Finanzamt-Steuer-Nummer"
    */
   public function getFastnr() {
-    // TODO: implement
-    return '123456789';
+    $settings = $this->getSettings();
+    return CRM_Utils_Array::value('fastnr', $settings, '');
   }
 
   /**
    * The organisation type in terms of tax exception
    */
   public function getOrgType() {
-    // TODO: implement
-    return 'NT';
+    $settings = $this->getSettings();
+    return CRM_Utils_Array::value('fasttype', $settings, '');
   }
 }

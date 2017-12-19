@@ -24,12 +24,29 @@ use CRM_Bpk_ExtensionUtil as E;
 class CRM_Bpk_Form_Settings extends CRM_Core_Form {
 
   public function buildQuickForm() {
+    CRM_Utils_System::setTitle(E::ts('BPK Extension Settings'));
+
+    $this->add(
+      'text',
+      'fastnr',
+      E::ts('Finanzamt Steuernummer'),
+      TRUE
+    );
+
+    $this->add(
+      'select',
+      'fasttype',
+      E::ts('Organisation Type'),
+      $this->getFATypes(),
+      FALSE,
+      array("class" => "huge")
+    );
 
     // add form elements
     $this->add(
       'text',
       'limit',
-      E::ts('Default Limit'),
+      E::ts('Request Limit'),
       TRUE
     );
 
@@ -116,6 +133,8 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
    */
   protected function getSettingsInForm() {
       return array(
+        'fasttype',
+        'fastnr',
         'limit',
         'key',
         'soap_header_namespace',
@@ -127,6 +146,9 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
       );
   }
 
+  /**
+   * @todo: Document and move, e.g. to config
+   */
   public static function getSoapHeaderSettingsParameters() {
     return array(
       'soap_header_namespace',
@@ -157,4 +179,25 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
     parent::postProcess();
   }
 
+  /**
+   * Get valid organisation types
+   */
+  protected function getFATypes() {
+    return array(
+      "KK" => "[KK] Einrichtung Kunst und Kultur (gem. § 4a Abs 2 Z 5 EStG)",
+      "SO" => "[SO] Karitative Einrichtungen (gem § 4a Abs 2 Z3 lit a bis c EStG)",
+      "FW" => "[FW] Wissenschaftseinrichtungen (gem. 4a Abs 2Z 1 EStG)",
+      "NT" => "[NT] Naturschutz und Tierheime (gem § 4a Abs 2 Z 3 lit d und e EStG)",
+      "SN" => "[SN] Sammeleinrichtungen Naturschutz (gem § 4a Abs 2 Z 3 lit d und e EStG)",
+      "SG" => "[SG] gemeinnützige Stiftungen (§ 4b EStG 1988, hinsichtlich Spenden)",
+      "UN" => "[UN] Universitätetn, Kunsthochschulen, Akademie der bildenden Künste (inkl. Fakultäten, Institute und besondere Einrichtungen, § 4a Abs 3 Z 1 EStG)",
+      "MÖ" => "[MÖ] Museen von Körperschaften öffentlichen Rechts (§ 4a Abs 4 lit b EStG)",
+      "MP" => "[MP] Privatmuseen mit überregionaler Bedeutung (§ 4a Abs 4 lit b EStG)",
+      "FF" => "[FF] Freiwillige Feuerwehren ( § 4a Abs 6 EStG) und Landesfeuerwehrverbände (§ 4a Abs 6 EStG) KR Kirchen und Religionsgesellschaften mit verpflichtenden Beiträgen (§ 18 Abs 1 Z 5 EStG)",
+      "PA" => "[PA] Pensionsversicherungsanstalten und Versorgungseinrichtungen (§ 18 Abs 1 Z 1a EStG)",
+      "SE" => "[SE] Behindertensportdachverbände, Internationale Anti-Korruptions-Akademie, Diplomatische Akademie (§ 4a Abs 4 EStG)",
+      "ZG" => "[ZG] gemeinnützige Stiftungen (§ 4b EStG, hinsichtlich Zuwendungen zur Vermögensausstattung) SV Spendensammeleinrichtungen karitativ (gem § 4a Abs 2 Z 3 lit a bis c EStG)",
+      "ZI" => "[ZI] Zuwendungen an die Innovationsstiftung für Bildung (§ 4c EStG 1988)"
+    );
+  }
 }
