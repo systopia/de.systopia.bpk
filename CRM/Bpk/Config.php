@@ -107,4 +107,20 @@ class CRM_Bpk_Config {
     }
     return $this->jobs;
   }
+
+  /**
+   * The organisation's uniqe "Finanzamt-Steuer-Nummer"
+   */
+  public function getFastnr() {
+    // TODO: implement
+    return '123456789';
+  }
+
+  /**
+   * The organisation type in terms of tax exception
+   */
+  public function getOrgType() {
+    // TODO: implement
+    return 'NT';
+  }
 }

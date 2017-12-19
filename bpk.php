@@ -17,6 +17,24 @@
 require_once 'bpk.civix.php';
 use CRM_Bpk_ExtensionUtil as E;
 
+
+/**
+ * Add contact search tasks to submit tax excemption XMLs
+ *
+ * @param string $objectType specifies the component
+ * @param array $tasks the list of actions
+ *
+ * @access public
+ */
+function bpk_civicrm_searchTasks($objectType, &$tasks) {
+  if ($objectType == 'contact') {
+    $tasks[] = array(
+        'title' => E::ts('Generate Tax Submission XML'),
+        'class' => 'CRM_Bpk_Form_Task_Submit',
+        'result' => false);
+  }
+}
+
 /**
  * Implements hook_civicrm_config().
  *
