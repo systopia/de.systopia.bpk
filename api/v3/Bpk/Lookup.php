@@ -17,15 +17,16 @@
 /**
  * BPK Lookup
  */
-function civicrm_api3_bpk_looup_create($params) {
-  $result = CRM_Bpk_Lookup::doSoapLookup($limit, $contact_id);
+function civicrm_api3_bpk_lookup($params) {
+  $result = CRM_Bpk_Lookup::doSoapLookup($params);
   return civicrm_api3_create_success("{$result['success']} contacts resolved successfully, {$result['failed']} failures.");
 }
+
 
 /**
  * BPK.lookup parameters
  */
-function _civicrm_api3_bpk_looup_create_spec(&$params) {
+function _civicrm_api3_bpk_lookup_spec(&$params) {
   $params['limit'] = array(
     'name'         => 'limit',
     'api.required' => 0,
