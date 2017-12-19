@@ -20,6 +20,14 @@
 class CRM_Bpk_Submission {
 
   /**
+   * Generates a unique message reference
+   */
+  protected static function generateMessageReference() {
+    // TODO: implement
+    return "GP-" . (int) microtime(TRUE);
+  }
+
+  /**
    * Generate (and stream to the output) the XML for
    * a list of contact IDs
    */
@@ -39,6 +47,7 @@ class CRM_Bpk_Submission {
     {$bpk_join}
     WHERE YEAR(receive_date) = {$year}
       AND contribution_status_id = 1
+      AND contact_id IN ({$ids})
       AND is_deleted = 0
       AND bpk.vbpk IS NOT NULL
     GROUP BY contact_id;
@@ -47,17 +56,31 @@ class CRM_Bpk_Submission {
   }
 
   /**
-   * Generates a unique message reference
+   * Generate (and stream to the output) the XML for
+   * all contacts of the given year
    */
-  protected static function generateMessageReference() {
-    // TODO: implement
-    return "GP-" . (int) microtime(TRUE);
+  public static function generateYear($year, $type) {
+    $year = (int) $year;
+    $ids  = implode(',', $contact_ids);
+    $bpk_join  = CRM_Bpk_CustomData::createSQLJoin('bpk', 'bpk', 'civicrm_contribution.contact_id');
+    $sql_query = "
+    SELECT
+      contact_id                     AS contact_id,
+      SUM(total_amount)              AS amount,
+      CONCAT('{$year}-', contact_id) AS reference,
+      '{$type}'                      AS stype,
+      bpk.vbpk                       AS vbpk
+    FROM civicrm_contribution
+    LEFT JOIN civicrm_contact ON civicrm_contact.id = civicrm_contribution.contact_id
+    {$bpk_join}
+    WHERE YEAR(receive_date) = {$year}
+      AND contribution_status_id = 1
+      AND is_deleted = 0
+      AND bpk.vbpk IS NOT NULL
+    GROUP BY contact_id;
+    ";
+    return self::generateXML($sql_query, $year);
   }
-
-
-  // public static function submitAll($year) {
-  //   // TODO
-  // }
 
   /**
    * will write the results of the XML file into the output stream
