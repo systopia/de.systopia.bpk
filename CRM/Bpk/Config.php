@@ -123,4 +123,13 @@ class CRM_Bpk_Config {
     $settings = $this->getSettings();
     return CRM_Utils_Array::value('fasttype', $settings, '');
   }
+
+  /**
+   * Generates a unique submission message reference
+   */
+  public function generateSubmissionReference() {
+    // TODO: implement
+    return "GP-" . (int) microtime(TRUE);
+  }
+
 }

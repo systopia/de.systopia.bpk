@@ -19,68 +19,84 @@
  */
 class CRM_Bpk_Submission {
 
+  protected $submission_id;
+  protected $amount;
+  protected $reference;
+  protected $year;
+  protected $type_map;
+
   /**
-   * Generates a unique message reference
+   * Creates a new submission instance,
+   * which will only be submitted once
+   * CRM_Bpk_Submission::store() is called
+   * or discarded if CRM_Bpk_Submission::discard().
    */
-  protected static function generateMessageReference() {
-    // TODO: implement
-    return "GP-" . (int) microtime(TRUE);
+  public function __construct($year) {
+    $config = CRM_Bpk_Config::singleton();
+    $this->reference  = $config->generateSubmissionReference();
+    $this->amount     = 0.0;
+    $this->year       = $year;
+    $created_by = CRM_Core_Session::getLoggedInContactID();
+
+    // start a transaction (so we can discard if necessary)
+    // \Civi\Core\Transaction\Manager::singleton()->inc(TRUE);
+
+    // create submission entry
+    CRM_Core_DAO::executeQuery("
+        INSERT INTO `civicrm_bmisa_submission` (`year`,`date`,`reference`,`amount`,`created_by`)
+        VALUES (%1, NOW(), %2, 0.00, %3);", array(
+          1 => array($this->year,      'Integer'),
+          2 => array($this->reference, 'String'),
+          3 => array($created_by,      'Integer')
+        ));
+
+    // finally, store some parameters
+    $this->submission_id = CRM_Core_DAO::singleValueQuery("SELECT LAST_INSERT_ID();");
+    $this->type_map = array('E' => 1, 'A' => 2, 'S' => 3);
   }
 
   /**
-   * Generate (and stream to the output) the XML for
-   * a list of contact IDs
+   * Add an individual entry
+   *  contact_id  - the donor's contact ID
+   *  amount      - the donor's total amount for that year
+   *  stype       - E, A, or S - from the docs:
+   *                   "E (Erstübermittlung), A (Änderungsübermittlung) oder S (Stornoübermittlung)"
    */
-  public static function generateForContactIDs($year, $contact_ids) {
-    $year = (int) $year;
-    $ids  = implode(',', $contact_ids);
-    $bpk_join  = CRM_Bpk_CustomData::createSQLJoin('bpk', 'bpk', 'civicrm_contribution.contact_id');
-    $sql_query = "
-    SELECT
-      contact_id                     AS contact_id,
-      SUM(total_amount)              AS amount,
-      CONCAT('{$year}-', contact_id) AS reference,
-      'E'                            AS stype,
-      bpk.vbpk                       AS vbpk
-    FROM civicrm_contribution
-    LEFT JOIN civicrm_contact ON civicrm_contact.id = civicrm_contribution.contact_id
-    {$bpk_join}
-    WHERE YEAR(receive_date) = {$year}
-      AND contribution_status_id = 1
-      AND contact_id IN ({$ids})
-      AND is_deleted = 0
-      AND bpk.vbpk IS NOT NULL
-    GROUP BY contact_id;
-    ";
-    return self::generateXML($sql_query, $year);
+  public function addEntry($contact_id, $amount, $stype) {
+    $type = $this->type_map[$stype];
+
+    // create submission record
+    CRM_Core_DAO::executeQuery("
+        INSERT INTO `civicrm_bmisa_record` (`submission_id`,`type`,`contact_id`,`year`,`amount`)
+        VALUES (%1, %2, %3, %4, %5);", array(
+          1 => array($this->submission_id,    'Integer'),
+          2 => array($this->type_map[$stype], 'Integer'),
+          3 => array($contact_id,             'Integer'),
+          4 => array($this->year,             'Integer'),
+          5 => array($amount,                 'String'),
+        ));
+
+    // also: keep track of the total
+    $this->amount += $amount;
   }
 
   /**
-   * Generate (and stream to the output) the XML for
-   * all contacts of the given year
+   * Finish the the submission
    */
-  public static function generateYear($year, $type) {
-    $year = (int) $year;
-    $ids  = implode(',', $contact_ids);
-    $bpk_join  = CRM_Bpk_CustomData::createSQLJoin('bpk', 'bpk', 'civicrm_contribution.contact_id');
-    $sql_query = "
-    SELECT
-      contact_id                     AS contact_id,
-      SUM(total_amount)              AS amount,
-      CONCAT('{$year}-', contact_id) AS reference,
-      '{$type}'                      AS stype,
-      bpk.vbpk                       AS vbpk
-    FROM civicrm_contribution
-    LEFT JOIN civicrm_contact ON civicrm_contact.id = civicrm_contribution.contact_id
-    {$bpk_join}
-    WHERE YEAR(receive_date) = {$year}
-      AND contribution_status_id = 1
-      AND is_deleted = 0
-      AND bpk.vbpk IS NOT NULL
-    GROUP BY contact_id;
-    ";
-    return self::generateXML($sql_query, $year);
+  public function commit() {
+    CRM_Core_DAO::executeQuery("
+        UPDATE `civicrm_bmisa_submission`
+        SET amount = %1
+        WHERE id = %2 ", array(
+          1 => array($this->amount,        'String'),
+          2 => array($this->submission_id, 'Integer'),
+        ));
+
+    // close transaction
+    // \Civi\Core\Transaction\Manager::singleton()->dec();
   }
+
+
 
   /**
    * will write the results of the XML file into the output stream
@@ -93,20 +109,20 @@ class CRM_Bpk_Submission {
    *  stype       - E, A, or S - from the docs:
    *                   "E (Erstübermittlung), A (Änderungsübermittlung) oder S (Stornoübermittlung)"
    */
-  protected static function generateXML($sql_query, $year) {
+  protected static function run($sql_query, $year) {
     $config = CRM_Bpk_Config::singleton();
-    $message_reference = self::generateMessageReference();
+    $submission = new CRM_Bpk_Submission($year);
 
     // WRITE HTML download header
     header('Content-Type: text/xml');
     header('Expires: ' . gmdate('D, d M Y H:i:s') . ' GMT');
     $isIE = strstr($_SERVER['HTTP_USER_AGENT'], 'MSIE');
     if ($isIE) {
-      header("Content-Disposition: inline; filename={$message_reference}.xml");
+      header("Content-Disposition: inline; filename={$submission->reference}.xml");
       header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
       header('Pragma: public');
     } else {
-      header("Content-Disposition: attachment; filename={$message_reference}.xml");
+      header("Content-Disposition: attachment; filename={$submission->reference}.xml");
       header('Pragma: no-cache');
     }
 
@@ -146,7 +162,10 @@ class CRM_Bpk_Submission {
     // write content
     $data = CRM_Core_DAO::executeQuery($sql_query);
     while ($data->fetch()) {
-      // WRITE Sonderausgaben BLOCK
+      // create a record
+      $submission->addEntry($data->contact_id, $data->amount, $data->stype);
+
+      // WRITE BLOCK "Sonderausgaben"
       $writer->startElement("Sonderausgaben");
       $writer->writeAttribute("Uebermittlungs_Typ", $data->stype);
       $writer->startElement("RefNr");
@@ -169,7 +188,69 @@ class CRM_Bpk_Submission {
     $writer->endDocument();
     $writer->flush();
 
+    // write-through the submission
+    $submission->commit();
+
     // we're done, no return
     CRM_Utils_System::civiExit();
+  }
+
+
+
+
+
+  /**
+   * Generate (and stream to the output) the XML for
+   * a list of contact IDs
+   */
+  public static function generateForContactIDs($year, $contact_ids) {
+    $year = (int) $year;
+    $ids  = implode(',', $contact_ids);
+    $bpk_join  = CRM_Bpk_CustomData::createSQLJoin('bpk', 'bpk', 'civicrm_contribution.contact_id');
+    $sql_query = "
+    SELECT
+      contact_id                     AS contact_id,
+      SUM(total_amount)              AS amount,
+      CONCAT('{$year}-', contact_id) AS reference,
+      'E'                            AS stype,
+      bpk.vbpk                       AS vbpk
+    FROM civicrm_contribution
+    LEFT JOIN civicrm_contact ON civicrm_contact.id = civicrm_contribution.contact_id
+    {$bpk_join}
+    WHERE YEAR(receive_date) = {$year}
+      AND contribution_status_id = 1
+      AND contact_id IN ({$ids})
+      AND is_deleted = 0
+      AND bpk.vbpk IS NOT NULL
+    GROUP BY contact_id;
+    ";
+    return self::run($sql_query, $year);
+  }
+
+  /**
+   * Generate (and stream to the output) the XML for
+   * all contacts of the given year
+   */
+  public static function generateYear($year, $type) {
+    $year = (int) $year;
+    $ids  = implode(',', $contact_ids);
+    $bpk_join  = CRM_Bpk_CustomData::createSQLJoin('bpk', 'bpk', 'civicrm_contribution.contact_id');
+    $sql_query = "
+    SELECT
+      contact_id                     AS contact_id,
+      SUM(total_amount)              AS amount,
+      CONCAT('{$year}-', contact_id) AS reference,
+      '{$type}'                      AS stype,
+      bpk.vbpk                       AS vbpk
+    FROM civicrm_contribution
+    LEFT JOIN civicrm_contact ON civicrm_contact.id = civicrm_contribution.contact_id
+    {$bpk_join}
+    WHERE YEAR(receive_date) = {$year}
+      AND contribution_status_id = 1
+      AND is_deleted = 0
+      AND bpk.vbpk IS NOT NULL
+    GROUP BY contact_id;
+    ";
+    return self::run($sql_query, $year);
   }
 }
