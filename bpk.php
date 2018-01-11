@@ -161,3 +161,16 @@ function bpk_civicrm_angularModules(&$angularModules) {
 function bpk_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
   _bpk_civix_civicrm_alterSettingsFolders($metaDataFolders);
 }
+
+/**
+ * Implements hook_civicrm_tabs()
+ *
+ * Will inject the BMI Submissions tab
+ */
+function bpk_civicrm_tabs(&$tabs, $contactID) {
+  $tabs[] = array( 'id'     => 'bmisa',
+                   'url'    => CRM_Utils_System::url('civicrm/bmi/submissions', "reset=1&snippet=1&force=1&cid={$contactID}"),
+                   'title'  => 'BMI Submissions',
+                   'weight' => 300);
+}
+

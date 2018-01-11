@@ -14,4 +14,10 @@
     <title>AnnualSubmission</title>
     <access_arguments>access CiviCRM</access_arguments>
   </item>
+  <item>
+    <path>civicrm/bmi/submissions</path>
+    <page_callback>CRM_Bpk_Page_SubmissionTab</page_callback>
+    <title>SubmissionTab</title>
+    <access_arguments>access CiviCRM</access_arguments>
+  </item>
 </menu>
