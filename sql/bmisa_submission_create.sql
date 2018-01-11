@@ -39,9 +39,9 @@ CREATE TABLE IF NOT EXISTS `civicrm_bmisa_record` (
      `year`     smallint unsigned  NOT NULL COMMENT 'submission year',
      `amount`       decimal(20,2)  NOT NULL COMMENT 'submitted amount for this contact',
      PRIMARY KEY (`id`),
-     UNIQUE INDEX `contact_id` (`contact_id`),
-     UNIQUE INDEX `year` (`year`),
-     UNIQUE INDEX `submission_id` (`submission_id`),
+     INDEX `contact_id` (`contact_id`),
+     INDEX `year` (`year`),
+     INDEX `submission_id` (`submission_id`),
      CONSTRAINT FK_civicrm_bmisa_record_submission FOREIGN KEY (`submission_id`) REFERENCES `civicrm_bmisa_submission`(`id`) ON DELETE CASCADE,
      CONSTRAINT FK_civicrm_bmisa_record_contact    FOREIGN KEY (`contact_id`)    REFERENCES `civicrm_contact`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;
