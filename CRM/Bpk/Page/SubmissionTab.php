@@ -24,15 +24,18 @@ class CRM_Bpk_Page_SubmissionTab extends CRM_Core_Page {
 
   public function run() {
     $contact_id = CRM_Utils_Request::retrieve('cid', 'Integer');
+    $type_map = array(1 => 'E', 2 => 'A', 3 => 'S');
 
     // TODO: gather donation data of this contact
 
     // gather the submission data of this contact
+    $years = array();
     $submissions = array();
     $query = CRM_Core_DAO::executeQuery("
       SELECT
         submission.reference AS reference,
         submission.date      AS date,
+        submission.year      AS year,
         record.amount        AS amount,
         record.type          AS type
       FROM `civicrm_bmisa_record` record
@@ -42,21 +45,28 @@ class CRM_Bpk_Page_SubmissionTab extends CRM_Core_Page {
       array(1 => array($contact_id, 'Integer')));
 
     while ($query->fetch()) {
+      // calculate class
+      if (isset($years[$query->year])) {
+        $class = 'bmisa-corrected';
+      } else {
+        $class = 'bmisa-current';
+        $years[$query->year] = 1; // mark year
+      }
+
       $submissions[] = array(
-        'reference' => $query['reference'],
-        'date'      => $query['date'],
-        'amount'    => $query['amount'],
-        'type'      => $query['type'],
+        'reference' => $query->reference,
+        'date'      => $query->date,
+        'year'      => $query->year,
+        'amount'    => $query->amount,
+        'type'      => $type_map[$query->type],
+        'class'     => $class,
       );
     }
 
     $this->assign('submissions', $submissions);
 
-    // // Example: Set the page-title dynamically; alternatively, declare a static title in xml/Menu/*.xml
-    // CRM_Utils_System::setTitle(E::ts('SubmissionTab'));
-
-    // // Example: Assign a variable for use in a template
-    // $this->assign('currentTime', date('Y-m-d H:i:s'));
+    // let's add some style...
+    CRM_Core_Resources::singleton()->addStyleFile('de.systopia.bpk', 'css/bmisa.css');
 
     parent::run();
   }

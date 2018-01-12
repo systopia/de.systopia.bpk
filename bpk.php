@@ -168,9 +168,11 @@ function bpk_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
  * Will inject the BMI Submissions tab
  */
 function bpk_civicrm_tabs(&$tabs, $contactID) {
+
   $tabs[] = array( 'id'     => 'bmisa',
                    'url'    => CRM_Utils_System::url('civicrm/bmi/submissions', "reset=1&snippet=1&force=1&cid={$contactID}"),
                    'title'  => 'BMI Submissions',
+                   'count'  => CRM_Bpk_Submission::getSubmissionCount($contactID),
                    'weight' => 300);
 }
 

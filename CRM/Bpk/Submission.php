@@ -195,8 +195,16 @@ class CRM_Bpk_Submission {
     CRM_Utils_System::civiExit();
   }
 
-
-
+  /**
+   * Get the number of (active) submissions for the given contact
+   */
+  public static function getSubmissionCount($contact_id, $years_only = FALSE) {
+    if ($years_only) {
+      return CRM_Core_DAO::singleValueQuery("SELECT COUNT(DISTINCT(`year`)) FROM `civicrm_bmisa_record` WHERE `contact_id` = %1;", array(1 => array($contact_id, 'Integer')));
+    } else {
+      return CRM_Core_DAO::singleValueQuery("SELECT COUNT(*) FROM `civicrm_bmisa_record` WHERE `contact_id` = %1;", array(1 => array($contact_id, 'Integer')));
+    }
+  }
 
 
   /**
