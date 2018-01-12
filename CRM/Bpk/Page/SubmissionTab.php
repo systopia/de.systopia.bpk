@@ -25,8 +25,24 @@ class CRM_Bpk_Page_SubmissionTab extends CRM_Core_Page {
   public function run() {
     $contact_id = CRM_Utils_Request::retrieve('cid', 'Integer');
     $type_map = array(1 => 'E', 2 => 'A', 3 => 'S');
+    $config = CRM_Bpk_Config::singleton();
 
-    // TODO: gather donation data of this contact
+    // gather donation data of this contact
+    $annual_donations = array();
+    $where_clauses = $config->getDeductibleContributionWhereClauses();
+    $where_clauses[] = "(civicrm_contribution.contact_id = %1)";
+    $where_clause = implode(' AND ', $where_clauses);
+    $query = CRM_Core_DAO::executeQuery("
+      SELECT
+        YEAR(civicrm_contribution.receive_date) AS year,
+        SUM(civicrm_contribution.total_amount)  AS amount
+      FROM civicrm_contribution
+      WHERE {$where_clause}
+      GROUP BY YEAR(civicrm_contribution.receive_date)
+      ORDER BY YEAR(civicrm_contribution.receive_date);", array(1 => array($contact_id, 'Integer')));
+    while ($query->fetch()) {
+      $annual_donations[$query->year] = $query->amount;
+    }
 
     // gather the submission data of this contact
     $years = array();
@@ -48,9 +64,15 @@ class CRM_Bpk_Page_SubmissionTab extends CRM_Core_Page {
       // calculate class
       if (isset($years[$query->year])) {
         $class = 'bmisa-corrected';
+        $current = '';
       } else {
-        $class = 'bmisa-current';
         $years[$query->year] = 1; // mark year
+        $current = isset($annual_donations[$query->year]) ? $annual_donations[$query->year] : 0.00;
+        if ($current == $query->amount) {
+          $class = 'bmisa-current';
+        } else {
+          $class = 'bmisa-changed';
+        }
       }
 
       $submissions[] = array(
@@ -60,6 +82,7 @@ class CRM_Bpk_Page_SubmissionTab extends CRM_Core_Page {
         'amount'    => $query->amount,
         'type'      => $type_map[$query->type],
         'class'     => $class,
+        'current'   => $current,
       );
     }
 

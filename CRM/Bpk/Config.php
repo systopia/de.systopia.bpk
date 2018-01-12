@@ -125,6 +125,54 @@ class CRM_Bpk_Config {
   }
 
   /**
+   * Get list of financial types that are deductible from taxes
+   *
+   * @return array of financial type IDs, or NULL (meaning all)
+   */
+  public function getDeductibleFinancialTypes() {
+    // TODO: Setting?
+    return NULL; // all
+  }
+
+  /**
+   * Get list of contribution statuses that are deductible
+   *
+   * @return array of contributions status IDs
+   */
+  public function getDeductibleContributionsStatuses() {
+    // TODO: Setting?
+    return array('1'); // Completed
+  }
+
+  /**
+   * Build (AND) where clauses for the contribution selector
+   *
+   * @return SQL SELECT
+   */
+  public function getDeductibleContributionWhereClauses($contribution_table_name = 'civicrm_contribution') {
+    $where_clauses = array();
+
+    // add NO TEST clause
+    $where_clauses[] = "(({$contribution_table_name}.is_test = 0) | ({$contribution_table_name}.is_test IS NULL))";
+
+    // add financial types clause
+    $financial_types = $this->getDeductibleFinancialTypes();
+    if (!empty($financial_types)) {
+      $financial_type_list = implode(',', $financial_types);
+      $where_clauses[] = "({$contribution_table_name}.financial_type_id IN ({$financial_type_list}))";
+    }
+
+    // add contribution clauses
+    $contribution_statuses = $this->getDeductibleContributionsStatuses();
+    if (!empty($contribution_statuses)) {
+      $contribution_status_list = implode(',', $contribution_statuses);
+      $where_clauses[] = "({$contribution_table_name}.contribution_status_id IN ({$contribution_status_list}))";
+    }
+
+    return $where_clauses;
+  }
+
+  /**
    * Generates a unique submission message reference
    */
   public function generateSubmissionReference() {

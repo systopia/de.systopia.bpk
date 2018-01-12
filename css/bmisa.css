@@ -24,3 +24,8 @@ tr.bmisa-current {
 tr.bmisa-corrected {
   color: grey;
 }
+
+tr.bmisa-changed {
+  font-weight: bold;
+  color: red;
+}

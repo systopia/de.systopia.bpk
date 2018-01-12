@@ -23,7 +23,7 @@
       <td>{ts domain="de.systopia.bpk"}Reference{/ts}</td>
       <td>{ts domain="de.systopia.bpk"}Type{/ts}</td>
       <td>{ts domain="de.systopia.bpk"}Submitted Amount{/ts}</td>
-      <!-- <td>{ts domain="de.systopia.bpk"}Current Amount{/ts}</td> -->
+      <td>{ts domain="de.systopia.bpk"}Current Amount{/ts}</td>
     </tr>
   </thead>
 
@@ -35,7 +35,7 @@
       <td>{$submission.reference}</td>
       <td>{$submission.type}</td>
       <td>{$submission.amount|crmMoney}</td>
-      <!-- <td>TODO</td> -->
+      <td>{$submission.current|crmMoney}</td>
     </tr>
     {/foreach}
   </tbody>

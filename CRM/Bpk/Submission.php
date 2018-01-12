@@ -81,12 +81,19 @@ class CRM_Bpk_Submission {
   }
 
   /**
+   * Generate an individual message for the contact
+   */
+  public function generateContactReference($contact_id) {
+    return $this->reference . '-' . $contact_id;
+  }
+
+  /**
    * Finish the the submission
    */
   public function commit() {
     CRM_Core_DAO::executeQuery("
         UPDATE `civicrm_bmisa_submission`
-        SET amount = %1
+        SET amount = %1, date = NOW()
         WHERE id = %2 ", array(
           1 => array($this->amount,        'String'),
           2 => array($this->submission_id, 'Integer'),
@@ -146,7 +153,7 @@ class CRM_Bpk_Submission {
     // WRITE MessageSpec BLOCK
     $writer->startElement("MessageSpec");
     $writer->startElement("MessageRefId");
-    $writer->text($message_reference);
+    $writer->text($submission->reference);
     $writer->endElement(); // end MessageRefId
     $writer->startElement("Timestamp");
     $writer->text(date('Y-m-d\TH:i:s'));
@@ -241,7 +248,6 @@ class CRM_Bpk_Submission {
    */
   public static function generateYear($year, $type) {
     $year = (int) $year;
-    $ids  = implode(',', $contact_ids);
     $bpk_join  = CRM_Bpk_CustomData::createSQLJoin('bpk', 'bpk', 'civicrm_contribution.contact_id');
     $sql_query = "
     SELECT
