@@ -45,6 +45,7 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
   protected function __construct($params) {
     if (!isset($params['contact_id'])) {
       // Shouldn't be possible
+      error_log("Leaving SOAPLookup constructor; contact_id is empty in params");
       return NULL;
     }
     $contact_details = $this->getPersonData($params['contact_id']);
@@ -105,6 +106,7 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
    * create SOAP Header from $config data
    */
   private function createSoapHeader() {
+    error_log("in createSoapHeader");
     $config = CRM_Bpk_Config::singleton();
     $soapHeaderParameters = $config->getSoapHeaderSettings();
 
@@ -143,6 +145,7 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
    * @param $contact array('first_name', 'last_name', 'birth_date')
    */
   public function getBpkResult($contact) {
+    error_log("querrying for contact " . json_encode($contact));
     // TODO: setup a single soap request
     if (!isset($contact['first_name']) || !isset($contact['last_name']) || !isset($contact['birth_date'])) {
       CRM_Core_Error::debug("Necessary Attributes aren't in array. Aborting transaction");
@@ -167,8 +170,18 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
         'VKZ' => 'BMF',
       )
     );
+    error_log("Executing Querry");
     // TODO: execute soap request now
-
+//    GetBPK   <-- function
+    // get function form wqsdl, and call via soap object
+//    try {
+      $this->soapClient->GetBPK($this->wsdl, $soap_request_data);
+//    } catch (Exception $e) {
+      CRM_Core_Error::debug(json_encode(htmlspecialchars($e)));
+      error_log("Request: " . json_encode($this->soapClient->__getLastRequest()));
+      error_log("Response: " . json_encode($this->soapClient->__getLastResponse()));
+//    }
+    error_log("finished Querry");
   }
 
   /**

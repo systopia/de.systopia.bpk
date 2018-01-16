@@ -34,7 +34,7 @@ abstract class CRM_Bpk_Lookup {
    * @return array with results: ['success' => <count>, 'failed' => <count>]
    */
   public static function doSoapLookup($params) {
-    $runner = new CRM_Bpk_SoapLookup();
+    $runner = new CRM_Bpk_SoapLookup($params);
 
     // step 1: select eligible contacts
     $select_sql = $runner->createSelectionQuery();
@@ -111,7 +111,9 @@ abstract class CRM_Bpk_Lookup {
     // TODO: Output to CiviCRM log here
     CRM_Core_Error::debug(json_encode($result));
     return;
+    // debug code end
 
+    // Actually execute query for results
     $cursor = CRM_Core_DAO::executeQuery($sql);
     while ($cursor->fetch()) {
       // $cursor->first_name, ...
@@ -151,6 +153,7 @@ abstract class CRM_Bpk_Lookup {
     // todo: implement as loop, but override in subclass
     foreach ($contacts as $contact) {
       $result = $this->getBpkResult($contact);
+
     }
   }
 
