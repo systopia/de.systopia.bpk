@@ -19,10 +19,4 @@
   <div class="clear"></div>
 </div>
 
-<div class="crm-section">
-  <div class="label">{$form.type.label}</div>
-  <div class="content">{$form.type.html}</div>
-  <div class="clear"></div>
-</div>
-
 {include file="CRM/common/formButtons.tpl" location="bottom"}

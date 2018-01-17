@@ -38,13 +38,6 @@ class CRM_Bpk_Form_Task_Submit extends CRM_Contact_Form_Task {
                       array(2017 => 2017, 2018 => 2018),
                       array());
 
-    // TODO: update?
-    $this->addElement('select',
-                      'type',
-                      E::ts('Type'),
-                      array('E' => E::ts('First submission')),
-                      // array('E' => E::ts('First submission'), 'A' => E::ts('Adjustment'), 'S' => E::ts('Withdrawal')),
-                      array());
 
     CRM_Core_Form::addDefaultButtons(E::ts("Generate XML"));
   }
@@ -52,6 +45,6 @@ class CRM_Bpk_Form_Task_Submit extends CRM_Contact_Form_Task {
 
   function postProcess() {
     $values = $this->exportValues();
-    CRM_Bpk_Submission::generateForContactIDs($values['year'], $this->_contactIds);
+    CRM_Bpk_Submission::generateYear($values['year'], $this->_contactIds);
   }
 }
