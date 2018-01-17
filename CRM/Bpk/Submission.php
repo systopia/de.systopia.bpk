@@ -305,7 +305,7 @@ class CRM_Bpk_Submission {
     LEFT JOIN `{$last_submission_link}` submission ON submission.contact_id = donation.contact_id
     LEFT JOIN `civicrm_bmisa_record`    record     ON submission.contact_id = record.contact_id
                                                   AND submission.submission_id = record.submission_id
-    WHERE NOT (donation.amount = record.amount)
+    WHERE (record.amount IS NULL OR donation.amount <> record.amount)
 
     UNION ALL
 
@@ -322,6 +322,12 @@ class CRM_Bpk_Submission {
     WHERE donation2.contact_id IS NULL
     ;";
     // error_log("FI: {$sql_query}");
+
+    // DEBUG CODE
+    $data = CRM_Core_DAO::executeQuery($sql_query);
+    while ($data->fetch()) {
+      error_log("C:{$data->contact_id} T:{$data->stype} A:{$data->amount}");
+    }
 
     // add cleanup
     self::$_cleanupSQLs[] = "DROP TABLE IF EXISTS `{$last_submission_link}`;";
