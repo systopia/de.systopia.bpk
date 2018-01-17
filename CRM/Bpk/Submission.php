@@ -19,6 +19,8 @@
  */
 class CRM_Bpk_Submission {
 
+  private static $_cleanupSQLs = array();
+
   protected $submission_id;
   protected $amount;
   protected $reference;
@@ -104,6 +106,16 @@ class CRM_Bpk_Submission {
   }
 
 
+  /**
+   * do some DB cleanup
+   */
+  protected static function cleanup() {
+    foreach (self::$_cleanupSQLs as $cleanupQuery) {
+      CRM_Core_DAO::executeQuery($cleanupQuery);
+    }
+    self::$_cleanupSQLs = array();
+  }
+
 
   /**
    * will write the results of the XML file into the output stream
@@ -176,7 +188,7 @@ class CRM_Bpk_Submission {
       $writer->startElement("Sonderausgaben");
       $writer->writeAttribute("Uebermittlungs_Typ", $data->stype);
       $writer->startElement("RefNr");
-      $writer->text($data->reference);
+      $writer->text($config->generateRecordReference($year, $data));
       $writer->endElement(); // end RefNr
       if ($data->stype == 'E' || $data->stype == 'A') {
         $writer->startElement("Betrag");
@@ -190,6 +202,7 @@ class CRM_Bpk_Submission {
       }
       $writer->endElement(); // end Sonderausgaben
     }
+    $data->free();
 
     $writer->endElement(); // end SonderausgabenUebermittlung
     $writer->endDocument();
@@ -199,6 +212,7 @@ class CRM_Bpk_Submission {
     $submission->commit();
 
     // we're done, no return
+    self::cleanup();
     CRM_Utils_System::civiExit();
   }
 
@@ -216,55 +230,104 @@ class CRM_Bpk_Submission {
 
   /**
    * Generate (and stream to the output) the XML for
-   * a list of contact IDs
-   */
-  public static function generateForContactIDs($year, $contact_ids) {
-    $year = (int) $year;
-    $ids  = implode(',', $contact_ids);
-    $bpk_join  = CRM_Bpk_CustomData::createSQLJoin('bpk', 'bpk', 'civicrm_contribution.contact_id');
-    $sql_query = "
-    SELECT
-      contact_id                     AS contact_id,
-      SUM(total_amount)              AS amount,
-      CONCAT('{$year}-', contact_id) AS reference,
-      'E'                            AS stype,
-      bpk.vbpk                       AS vbpk
-    FROM civicrm_contribution
-    LEFT JOIN civicrm_contact ON civicrm_contact.id = civicrm_contribution.contact_id
-    {$bpk_join}
-    WHERE YEAR(receive_date) = {$year}
-      AND contribution_status_id = 1
-      AND contact_id IN ({$ids})
-      AND is_deleted = 0
-      AND bpk.vbpk IS NOT NULL
-    GROUP BY contact_id;
-    ";
-    return self::run($sql_query, $year);
-  }
-
-  /**
-   * Generate (and stream to the output) the XML for
    * all contacts of the given year
    */
-  public static function generateYear($year, $type) {
+  public static function generateYear($year, $contact_ids = NULL) {
+    $config = CRM_Bpk_Config::singleton();
     $year = (int) $year;
+
+    // TMP TABLE:
+    //  eligible submissions
+    $eligible_donations = "tmp_bmi_donations_{$year}";
     $bpk_join  = CRM_Bpk_CustomData::createSQLJoin('bpk', 'bpk', 'civicrm_contribution.contact_id');
+    // compile where clause
+    $where_clauses = $config->getDeductibleContributionWhereClauses();
+    $where_clauses[] = "(YEAR(civicrm_contribution.receive_date) = {$year})"; // select year
+    $where_clauses[] = "(civicrm_contact.is_deleted = 0)";                    // no deleted contacts
+    $where_clauses[] = "(bpk.vbpk IS NOT NULL)";                              // only contacts with bpk
+    if (!empty($contact_ids)) {
+      $contact_id_list = implode(',', $contact_ids);
+      $where_clauses[] = "(civicrm_contact.id IN ({$contact_id_list}))";
+    }
+    $where_clause = implode(' AND ', $where_clauses);
+
+    CRM_Core_DAO::executeQuery("DROP TABLE IF EXISTS `{$eligible_donations}`;");
+    $eligible_donation_query = "
+      CREATE TABLE `{$eligible_donations}` AS
+        SELECT
+          contact_id                     AS contact_id,
+          SUM(total_amount)              AS amount
+        FROM civicrm_contribution
+        LEFT JOIN civicrm_contact ON civicrm_contact.id = civicrm_contribution.contact_id
+        {$bpk_join}
+        WHERE {$where_clause}
+        GROUP BY contact_id;";
+    // error_log("T1: {$eligible_donation_query}");
+    CRM_Core_DAO::executeQuery($eligible_donation_query);
+    CRM_Core_DAO::executeQuery("ALTER TABLE `{$eligible_donations}` ADD INDEX `contact_id` (`contact_id`);");
+
+    // TMP TABLE:
+    //   last submission per contact
+    $last_submission_link = "tmp_bmi_lastsubmission_{$year}";
+    $where_clauses = array("(year = {$year})");
+    if (!empty($contact_ids)) {
+      $contact_id_list = implode(',', $contact_ids);
+      $where_clauses[] = "(contact_id IN ({$contact_id_list}))";
+    }
+    $where_clause = implode(' AND ', $where_clauses);
+
+    CRM_Core_DAO::executeQuery("DROP TABLE IF EXISTS `{$last_submission_link}`;");
+    $lastsubmission_query = "
+      CREATE TABLE `{$last_submission_link}` AS
+      SELECT
+        contact_id         AS contact_id,
+        MAX(submission_id) AS submission_id
+      FROM `civicrm_bmisa_record`
+      WHERE {$where_clause}";
+    // error_log("T2: {$lastsubmission_query}");
+    CRM_Core_DAO::executeQuery($lastsubmission_query);
+    CRM_Core_DAO::executeQuery("ALTER TABLE `{$last_submission_link}` ADD INDEX `contact_id` (`contact_id`);");
+    CRM_Core_DAO::executeQuery("ALTER TABLE `{$last_submission_link}` ADD INDEX `submission_id` (`submission_id`);");
+
+    // FINAL QUERY:
+    //   all eligible donations that haven't been submitted in this way
+    //   + all submissions without any eligible donation
+    $bpk_join1 = CRM_Bpk_CustomData::createSQLJoin('bpk', 'bpk',  'donation.contact_id');
+    $bpk_join2 = CRM_Bpk_CustomData::createSQLJoin('bpk', 'bpk2', 'submission2.contact_id');
     $sql_query = "
     SELECT
-      contact_id                     AS contact_id,
-      SUM(total_amount)              AS amount,
-      CONCAT('{$year}-', contact_id) AS reference,
-      '{$type}'                      AS stype,
-      bpk.vbpk                       AS vbpk
-    FROM civicrm_contribution
-    LEFT JOIN civicrm_contact ON civicrm_contact.id = civicrm_contribution.contact_id
-    {$bpk_join}
-    WHERE YEAR(receive_date) = {$year}
-      AND contribution_status_id = 1
-      AND is_deleted = 0
-      AND bpk.vbpk IS NOT NULL
-    GROUP BY contact_id;
-    ";
+      donation.contact_id                         AS contact_id,
+      IF(submission.contact_id IS NULL, 'E', 'A') AS stype,
+      donation.amount                             AS amount,
+      bpk.vbpk                                    AS vbpk
+    FROM `{$eligible_donations}` donation
+    {$bpk_join1}
+    LEFT JOIN `{$last_submission_link}` submission ON submission.contact_id = donation.contact_id
+    LEFT JOIN `civicrm_bmisa_record`    record     ON submission.contact_id = record.contact_id
+                                                  AND submission.submission_id = record.submission_id
+    WHERE NOT (donation.amount = record.amount)
+
+    UNION ALL
+
+    SELECT
+      submission2.contact_id AS contact_id,
+      'S'                    AS stype,
+      record2.amount         AS amount,
+      bpk2.vbpk              AS vbpk
+    FROM `{$last_submission_link}` submission2
+    {$bpk_join2}
+    LEFT JOIN `civicrm_bmisa_record`    record2     ON submission2.contact_id = record2.contact_id
+                                                   AND submission2.submission_id = record2.submission_id
+    LEFT JOIN `{$eligible_donations}` donation2     ON donation2.contact_id = submission2.contact_id
+    WHERE donation2.contact_id IS NULL
+    ;";
+    // error_log("FI: {$sql_query}");
+
+    // add cleanup
+    self::$_cleanupSQLs[] = "DROP TABLE IF EXISTS `{$last_submission_link}`;";
+    self::$_cleanupSQLs[] = "DROP TABLE IF EXISTS `{$eligible_donations}`;";
+
+    // TODO: drop tables?
     return self::run($sql_query, $year);
   }
 }

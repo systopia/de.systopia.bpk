@@ -33,14 +33,6 @@ class CRM_Bpk_Form_AnnualSubmission extends CRM_Core_Form {
                       array(2017 => 2017, 2018 => 2018),
                       array());
 
-    // TODO: update?
-    $this->addElement('select',
-                      'type',
-                      E::ts('Type'),
-                      array('E' => E::ts('First submission')),
-                      // array('E' => E::ts('First submission'), 'A' => E::ts('Adjustment'), 'S' => E::ts('Withdrawal')),
-                      array());
-
     $this->addButtons(array(
       array(
         'type' => 'submit',
@@ -54,6 +46,6 @@ class CRM_Bpk_Form_AnnualSubmission extends CRM_Core_Form {
 
   public function postProcess() {
     $values = $this->exportValues();
-    CRM_Bpk_Submission::generateYear($values['year'], $values['type']);
+    CRM_Bpk_Submission::generateYear($values['year']);
   }
 }

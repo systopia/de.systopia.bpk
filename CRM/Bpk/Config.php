@@ -176,8 +176,17 @@ class CRM_Bpk_Config {
    * Generates a unique submission message reference
    */
   public function generateSubmissionReference() {
-    // TODO: implement
+    // TODO: implement config?
     return "GP-" . (int) microtime(TRUE);
+  }
+
+  /**
+   * Generates a reference for the per-contact
+   *  submission record
+   */
+  public function generateRecordReference($year, $data) {
+    // TODO: implement config?
+    return "{$year}-{$data->contact_id}";
   }
 
 }
