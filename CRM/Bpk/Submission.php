@@ -14,6 +14,8 @@
 | written permission from the original author(s).        |
 +--------------------------------------------------------*/
 
+use CRM_Bpk_ExtensionUtil as E;
+
 /**
  * This class contains the logic to generate XML files
  */
@@ -131,6 +133,14 @@ class CRM_Bpk_Submission {
   protected static function run($sql_query, $year) {
     $config = CRM_Bpk_Config::singleton();
     $submission = new CRM_Bpk_Submission($year);
+    $data_pending = TRUE;
+
+    // FETCH FIRST RECORD
+    $data = CRM_Core_DAO::executeQuery($sql_query);
+    if (!$data->fetch()) {
+      CRM_Core_Session::setStatus(E::ts("No changes to submit."), E::ts('No Changes'), 'info');
+      return;
+    }
 
     // WRITE HTML download header
     header('Content-Type: text/xml');
@@ -179,8 +189,7 @@ class CRM_Bpk_Submission {
     $writer->endElement(); // end MessageSpec
 
     // write content
-    $data = CRM_Core_DAO::executeQuery($sql_query);
-    while ($data->fetch()) {
+    while ($data_pending) {
       // create a record
       $submission->addEntry($data->contact_id, $data->amount, $data->stype);
 
@@ -201,6 +210,9 @@ class CRM_Bpk_Submission {
         $writer->endElement(); // end vbPK
       }
       $writer->endElement(); // end Sonderausgaben
+
+      // fetch the next record
+      $data_pending = $data->fetch();
     }
     $data->free();
 
@@ -319,9 +331,10 @@ class CRM_Bpk_Submission {
     LEFT JOIN `civicrm_bmisa_record`    record2     ON submission2.contact_id = record2.contact_id
                                                    AND submission2.submission_id = record2.submission_id
     LEFT JOIN `{$eligible_donations}` donation2     ON donation2.contact_id = submission2.contact_id
-    WHERE donation2.contact_id IS NULL
+    WHERE submission2.contact_id IS NOT NULL
+      AND donation2.contact_id IS NULL
     ;";
-    // error_log("FI: {$sql_query}");
+    // die("FI: {$sql_query}");
 
     // DEBUG CODE
     $data = CRM_Core_DAO::executeQuery($sql_query);
