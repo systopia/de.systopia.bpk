@@ -52,6 +52,7 @@ class CRM_Bpk_Page_SubmissionTab extends CRM_Core_Page {
         submission.reference AS reference,
         submission.date      AS date,
         submission.year      AS year,
+        record.type          AS type,
         record.amount        AS amount
       FROM `civicrm_bmisa_record` record
       LEFT JOIN `civicrm_bmisa_submission` submission ON submission.id = record.submission_id

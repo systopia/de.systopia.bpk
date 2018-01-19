@@ -67,7 +67,13 @@ class CRM_Bpk_Submission {
    *                   "E (Erstübermittlung), A (Änderungsübermittlung) oder S (Stornoübermittlung)"
    */
   public function addEntry($contact_id, $amount, $stype) {
+    // lookup type
     $type = $this->type_map[$stype];
+
+    // Storno type gets amount 0
+    if ($stype == 'S') {
+      $amount = 0.0;
+    }
 
     // create submission record
     CRM_Core_DAO::executeQuery("
@@ -335,13 +341,6 @@ class CRM_Bpk_Submission {
     WHERE submission2.contact_id IS NOT NULL
       AND donation2.contact_id IS NULL
     ;";
-    // die("FI: {$sql_query}");
-
-    // DEBUG CODE
-    $data = CRM_Core_DAO::executeQuery($sql_query);
-    while ($data->fetch()) {
-      error_log("C:{$data->contact_id} T:{$data->stype} A:{$data->amount}");
-    }
 
     // add cleanup
     self::$_cleanupSQLs[] = "DROP TABLE IF EXISTS `{$last_submission_link}`;";
