@@ -70,9 +70,9 @@ class CRM_Bpk_Submission {
     // lookup type
     $type = $this->type_map[$stype];
 
-    // Storno type gets amount 0
+    // Storno gets no amount
     if ($stype == 'S') {
-      $amount = 0.0;
+      $amount = '0.00';
     }
 
     // create submission record
@@ -340,6 +340,7 @@ class CRM_Bpk_Submission {
     LEFT JOIN `{$eligible_donations}` donation2     ON donation2.contact_id = submission2.contact_id
     WHERE submission2.contact_id IS NOT NULL
       AND donation2.contact_id IS NULL
+      AND record2.type <> 3
     ;";
 
     // add cleanup
