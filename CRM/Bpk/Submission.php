@@ -295,7 +295,8 @@ class CRM_Bpk_Submission {
         contact_id         AS contact_id,
         MAX(submission_id) AS submission_id
       FROM `civicrm_bmisa_record`
-      WHERE {$where_clause}";
+      WHERE {$where_clause}
+      GROUP BY contact_id";
     // error_log("T2: {$lastsubmission_query}");
     CRM_Core_DAO::executeQuery($lastsubmission_query);
     CRM_Core_DAO::executeQuery("ALTER TABLE `{$last_submission_link}` ADD INDEX `contact_id` (`contact_id`);");
