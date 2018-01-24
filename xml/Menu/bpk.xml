@@ -12,7 +12,7 @@
     <path>civicrm/bmf/annual</path>
     <page_callback>CRM_Bpk_Form_AnnualSubmission</page_callback>
     <title>AnnualSubmission</title>
-    <access_arguments>access CiviCRM</access_arguments>
+    <access_arguments>administer CiviCRM</access_arguments>
   </item>
   <item>
     <path>civicrm/bmf/submissions</path>

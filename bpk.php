@@ -168,11 +168,27 @@ function bpk_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
  * Will inject the BMF Submissions tab
  */
 function bpk_civicrm_tabs(&$tabs, $contactID) {
-
   $tabs[] = array( 'id'     => 'bmfsa',
                    'url'    => CRM_Utils_System::url('civicrm/bmf/submissions', "reset=1&snippet=1&force=1&cid={$contactID}"),
-                   'title'  => 'BMF Submissions',
+                   'title'  => E::ts('BMF Submissions'),
                    'count'  => CRM_Bpk_Submission::getSubmissionCount($contactID),
                    'weight' => 300);
 }
 
+
+/**
+ * Implements hook_civicrm_navigationMenu().
+ *
+ * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_navigationMenu
+ */
+function bpk_civicrm_navigationMenu(&$menu) {
+  _bpk_civix_insert_navigation_menu($menu, 'Contributions', array(
+    'label'      => E::ts('BMF Annual Submission'),
+    'name'       => 'bmf_annual',
+    'url'        => 'civicrm/bmf/annual',
+    'permission' => 'administer CiviCRM',
+    'operator'   => 'OR',
+    'separator'  => 0,
+  ));
+  _bpk_civix_navigationMenu($menu);
+}
