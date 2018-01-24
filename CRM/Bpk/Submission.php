@@ -265,7 +265,7 @@ class CRM_Bpk_Submission {
     // compile where clause
     $where_clauses = $config->getDeductibleContributionWhereClauses();
     $where_clauses[] = "(YEAR(civicrm_contribution.receive_date) = {$year})"; // select year
-    $where_clauses[] = "(civicrm_contact.is_deleted = 0)";                    // no deleted contacts
+    // $where_clauses[] = "(civicrm_contact.is_deleted = 0)"; explcitely DO process trashed contacts (see GP-1334)
     $where_clauses[] = "(bpk.vbpk IS NOT NULL)";                              // only contacts with bpk
     if (!empty($contact_ids)) {
       $contact_id_list = implode(',', $contact_ids);
