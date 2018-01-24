@@ -41,13 +41,17 @@ class CRM_Bpk_Submission {
     $this->amount     = 0.0;
     $this->year       = $year;
     $created_by = CRM_Core_Session::getLoggedInContactID();
+    if (empty($created_by)) {
+      // fallback to avoid errors
+      $created_by = 1;
+    }
 
     // start a transaction (so we can discard if necessary)
     // \Civi\Core\Transaction\Manager::singleton()->inc(TRUE);
 
     // create submission entry
     CRM_Core_DAO::executeQuery("
-        INSERT INTO `civicrm_bmisa_submission` (`year`,`date`,`reference`,`amount`,`created_by`)
+        INSERT INTO `civicrm_bmfsa_submission` (`year`,`date`,`reference`,`amount`,`created_by`)
         VALUES (%1, NOW(), %2, 0.00, %3);", array(
           1 => array($this->year,      'Integer'),
           2 => array($this->reference, 'String'),
@@ -77,7 +81,7 @@ class CRM_Bpk_Submission {
 
     // create submission record
     CRM_Core_DAO::executeQuery("
-        INSERT INTO `civicrm_bmisa_record` (`submission_id`,`type`,`contact_id`,`year`,`amount`)
+        INSERT INTO `civicrm_bmfsa_record` (`submission_id`,`type`,`contact_id`,`year`,`amount`)
         VALUES (%1, %2, %3, %4, %5);", array(
           1 => array($this->submission_id,    'Integer'),
           2 => array($this->type_map[$stype], 'Integer'),
@@ -102,7 +106,7 @@ class CRM_Bpk_Submission {
    */
   public function commit() {
     CRM_Core_DAO::executeQuery("
-        UPDATE `civicrm_bmisa_submission`
+        UPDATE `civicrm_bmfsa_submission`
         SET amount = %1, date = NOW()
         WHERE id = %2 ", array(
           1 => array($this->amount,        'String'),
@@ -239,9 +243,9 @@ class CRM_Bpk_Submission {
    */
   public static function getSubmissionCount($contact_id, $years_only = FALSE) {
     if ($years_only) {
-      return CRM_Core_DAO::singleValueQuery("SELECT COUNT(DISTINCT(`year`)) FROM `civicrm_bmisa_record` WHERE `contact_id` = %1;", array(1 => array($contact_id, 'Integer')));
+      return CRM_Core_DAO::singleValueQuery("SELECT COUNT(DISTINCT(`year`)) FROM `civicrm_bmfsa_record` WHERE `contact_id` = %1;", array(1 => array($contact_id, 'Integer')));
     } else {
-      return CRM_Core_DAO::singleValueQuery("SELECT COUNT(*) FROM `civicrm_bmisa_record` WHERE `contact_id` = %1;", array(1 => array($contact_id, 'Integer')));
+      return CRM_Core_DAO::singleValueQuery("SELECT COUNT(*) FROM `civicrm_bmfsa_record` WHERE `contact_id` = %1;", array(1 => array($contact_id, 'Integer')));
     }
   }
 
@@ -256,7 +260,7 @@ class CRM_Bpk_Submission {
 
     // TMP TABLE:
     //  eligible submissions
-    $eligible_donations = "tmp_bmi_donations_{$year}";
+    $eligible_donations = "tmp_bmf_donations_{$year}";
     $bpk_join  = CRM_Bpk_CustomData::createSQLJoin('bpk', 'bpk', 'civicrm_contribution.contact_id');
     // compile where clause
     $where_clauses = $config->getDeductibleContributionWhereClauses();
@@ -286,7 +290,7 @@ class CRM_Bpk_Submission {
 
     // TMP TABLE:
     //   last submission per contact
-    $last_submission_link = "tmp_bmi_lastsubmission_{$year}";
+    $last_submission_link = "tmp_bmf_lastsubmission_{$year}";
     $where_clauses = array("(year = {$year})");
     if (!empty($contact_ids)) {
       $contact_id_list = implode(',', $contact_ids);
@@ -300,7 +304,7 @@ class CRM_Bpk_Submission {
       SELECT
         contact_id         AS contact_id,
         MAX(submission_id) AS submission_id
-      FROM `civicrm_bmisa_record`
+      FROM `civicrm_bmfsa_record`
       WHERE {$where_clause}
       GROUP BY contact_id";
     // error_log("T2: {$lastsubmission_query}");
@@ -322,7 +326,7 @@ class CRM_Bpk_Submission {
     FROM `{$eligible_donations}` donation
     {$bpk_join1}
     LEFT JOIN `{$last_submission_link}` submission ON submission.contact_id = donation.contact_id
-    LEFT JOIN `civicrm_bmisa_record`    record     ON submission.contact_id = record.contact_id
+    LEFT JOIN `civicrm_bmfsa_record`    record     ON submission.contact_id = record.contact_id
                                                   AND submission.submission_id = record.submission_id
     WHERE (record.amount IS NULL OR donation.amount <> record.amount)
 
@@ -335,7 +339,7 @@ class CRM_Bpk_Submission {
       bpk2.vbpk              AS vbpk
     FROM `{$last_submission_link}` submission2
     {$bpk_join2}
-    LEFT JOIN `civicrm_bmisa_record`    record2     ON submission2.contact_id = record2.contact_id
+    LEFT JOIN `civicrm_bmfsa_record`    record2     ON submission2.contact_id = record2.contact_id
                                                    AND submission2.submission_id = record2.submission_id
     LEFT JOIN `{$eligible_donations}` donation2     ON donation2.contact_id = submission2.contact_id
     WHERE submission2.contact_id IS NOT NULL

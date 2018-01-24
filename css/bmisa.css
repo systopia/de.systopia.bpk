@@ -13,19 +13,19 @@
 | written permission from the original author(s).        |
 +--------------------------------------------------------*/
 
-tr.bmisa-record {
+tr.bmfsa-record {
 
 }
 
-tr.bmisa-current {
+tr.bmfsa-current {
   font-weight: bold;
 }
 
-tr.bmisa-corrected {
+tr.bmfsa-corrected {
   color: grey;
 }
 
-tr.bmisa-changed {
+tr.bmfsa-changed {
   font-weight: bold;
   color: red;
 }

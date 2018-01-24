@@ -18,7 +18,7 @@ use CRM_Bpk_ExtensionUtil as E;
 
 /**
  * This tab will show an overview of a contact's
- * submissions to the BMI
+ * submissions to the BMF
  */
 class CRM_Bpk_Page_SubmissionTab extends CRM_Core_Page {
 
@@ -54,8 +54,8 @@ class CRM_Bpk_Page_SubmissionTab extends CRM_Core_Page {
         submission.year      AS year,
         record.type          AS type,
         record.amount        AS amount
-      FROM `civicrm_bmisa_record` record
-      LEFT JOIN `civicrm_bmisa_submission` submission ON submission.id = record.submission_id
+      FROM `civicrm_bmfsa_record` record
+      LEFT JOIN `civicrm_bmfsa_submission` submission ON submission.id = record.submission_id
       WHERE record.contact_id = %1
       ORDER BY record.year DESC, submission.date DESC",
       array(1 => array($contact_id, 'Integer')));
@@ -63,15 +63,15 @@ class CRM_Bpk_Page_SubmissionTab extends CRM_Core_Page {
     while ($query->fetch()) {
       // calculate class
       if (isset($years[$query->year])) {
-        $class = 'bmisa-corrected';
+        $class = 'bmfsa-corrected';
         $current = '';
       } else {
         $years[$query->year] = 1; // mark year
         $current = isset($annual_donations[$query->year]) ? $annual_donations[$query->year] : 0.00;
         if ($current == $query->amount) {
-          $class = 'bmisa-current';
+          $class = 'bmfsa-current';
         } else {
-          $class = 'bmisa-changed';
+          $class = 'bmfsa-changed';
         }
       }
 
@@ -89,7 +89,7 @@ class CRM_Bpk_Page_SubmissionTab extends CRM_Core_Page {
     $this->assign('submissions', $submissions);
 
     // let's add some style...
-    CRM_Core_Resources::singleton()->addStyleFile('de.systopia.bpk', 'css/bmisa.css');
+    CRM_Core_Resources::singleton()->addStyleFile('de.systopia.bpk', 'css/bmfsa.css');
 
     parent::run();
   }

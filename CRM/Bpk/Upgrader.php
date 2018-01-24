@@ -25,7 +25,7 @@ class CRM_Bpk_Upgrader extends CRM_Bpk_Upgrader_Base {
    * Install data stuctures
    */
   public function install() {
-    $this->executeSqlFile('sql/bmisa_submission_create.sql');
+    $this->executeSqlFile('sql/bmfsa_submission_create.sql');
   }
 
   /**
@@ -44,7 +44,15 @@ class CRM_Bpk_Upgrader extends CRM_Bpk_Upgrader_Base {
    * Make sure to add data stuctures
    */
   public function upgrade_0021() {
-    $this->executeSqlFile('sql/bmisa_submission_create.sql');
+    $this->executeSqlFile('sql/bmfsa_submission_create.sql');
+    return TRUE;
+  }
+
+  /**
+   * Make sure to add data stuctures
+   */
+  public function upgrade_0030() {
+    $this->executeSqlFile('sql/bmfsa_submission_create.sql');
     return TRUE;
   }
 }

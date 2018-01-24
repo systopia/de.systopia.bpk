@@ -9,13 +9,13 @@
     <icon>admin/import_export_map.png</icon>
   </item>
   <item>
-    <path>civicrm/bpk/annual</path>
+    <path>civicrm/bmf/annual</path>
     <page_callback>CRM_Bpk_Form_AnnualSubmission</page_callback>
     <title>AnnualSubmission</title>
     <access_arguments>access CiviCRM</access_arguments>
   </item>
   <item>
-    <path>civicrm/bmi/submissions</path>
+    <path>civicrm/bmf/submissions</path>
     <page_callback>CRM_Bpk_Page_SubmissionTab</page_callback>
     <title>SubmissionTab</title>
     <access_arguments>access CiviCRM</access_arguments>

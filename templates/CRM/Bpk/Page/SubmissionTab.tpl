@@ -29,7 +29,7 @@
 
   <tbody>
     {foreach from=$submissions item=submission}
-    <tr class="bmisa-record {$submission.class} {cycle values="odd-row,even-row"}"">
+    <tr class="bmfsa-record {$submission.class} {cycle values="odd-row,even-row"}"">
       <td>{$submission.year}</td>
       <td>{$submission.date|crmDate}</td>
       <td>{$submission.reference}</td>
@@ -44,7 +44,7 @@
 {else}
 
 <div id="help">
-{ts domain="de.systopia.bpk"}This contact no recorded submissions to the BMI.{/ts}
+{ts domain="de.systopia.bpk"}This contact no recorded submissions to the BMF.{/ts}
 </div>
 
 {/if}
