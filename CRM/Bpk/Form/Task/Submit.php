@@ -31,11 +31,13 @@ class CRM_Bpk_Form_Task_Submit extends CRM_Contact_Form_Task {
     CRM_Utils_System::setTitle(E::ts('Generate XML Submission %1 Contacts',
       array(1 => count($this->_contactIds))));
 
+    $config = CRM_Bpk_Config::singleton();
+
     // YEAR selector
     $this->addElement('select',
                       'year',
                       E::ts('Year'),
-                      array(2017 => 2017, 2018 => 2018),
+                      $config->getEligibleYearsForSubmission(),
                       array());
 
 

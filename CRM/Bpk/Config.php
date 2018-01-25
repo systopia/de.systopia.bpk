@@ -203,4 +203,18 @@ class CRM_Bpk_Config {
     return "26";
   }
 
+  /**
+   * Get a list of years to be eligible for submission
+   *
+   * @return array with the year in key and value
+   */
+  public function getEligibleYearsForSubmission() {
+    $year_list = array();
+    $years = range(date('Y'), 2017);
+    foreach ($years as $year) {
+      $year_list[$year] = $year;
+    }
+    return $year_list;
+  }
+
 }

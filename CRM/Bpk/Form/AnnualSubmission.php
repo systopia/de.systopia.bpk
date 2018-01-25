@@ -25,12 +25,13 @@ class CRM_Bpk_Form_AnnualSubmission extends CRM_Core_Form {
 
   public function buildQuickForm() {
     CRM_Utils_System::setTitle(E::ts('Generate Annual Tax Submission'));
+    $config = CRM_Bpk_Config::singleton();
 
     // YEAR selector
     $this->addElement('select',
                       'year',
                       E::ts('Year'),
-                      array(2017 => 2017, 2018 => 2018),
+                      $config->getEligibleYearsForSubmission(),
                       array());
 
     $this->addButtons(array(
