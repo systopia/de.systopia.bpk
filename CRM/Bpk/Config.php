@@ -189,4 +189,18 @@ class CRM_Bpk_Config {
     return "{$year}-{$data->contact_id}";
   }
 
+  /**
+   * Returns the IDs of the contact groups that shoulde
+   * be excluded from submission
+   *
+   * CAUTION: has to return at least 1 ID to avoid SQL Syntax error,
+   *             send a dummy (e.g. 9999999) if you don't want to exclude any
+   *
+   * @return string a csv list of ids
+   */
+  public function getGrousExcludedFromSubmission() {
+    // TODO: implement config?
+    return "26";
+  }
+
 }

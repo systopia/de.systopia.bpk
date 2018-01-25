@@ -262,28 +262,34 @@ class CRM_Bpk_Submission {
     //  eligible submissions
     $eligible_donations = "tmp_bmf_donations_{$year}";
     $bpk_join  = CRM_Bpk_CustomData::createSQLJoin('bpk', 'bpk', 'civicrm_contribution.contact_id');
+
     // compile where clause
     $where_clauses = $config->getDeductibleContributionWhereClauses();
     $where_clauses[] = "(YEAR(civicrm_contribution.receive_date) = {$year})"; // select year
     // $where_clauses[] = "(civicrm_contact.is_deleted = 0)"; explcitely DO process trashed contacts (see GP-1334)
+    $where_clauses[] = "(civicrm_group_contact.id IS NULL)";                  // not member of the excluded groups
     $where_clauses[] = "(bpk.vbpk IS NOT NULL)";                              // only contacts with bpk
     if (!empty($contact_ids)) {
       $contact_id_list = implode(',', $contact_ids);
       $where_clauses[] = "(civicrm_contact.id IN ({$contact_id_list}))";
     }
     $where_clause = implode(' AND ', $where_clauses);
+    $excluded_group_ids = $config->getGrousExcludedFromSubmission();
 
     CRM_Core_DAO::executeQuery("DROP TABLE IF EXISTS `{$eligible_donations}`;");
     $eligible_donation_query = "
       CREATE TABLE `{$eligible_donations}` AS
         SELECT
-          contact_id                     AS contact_id,
-          SUM(total_amount)              AS amount
+          civicrm_contribution.contact_id AS contact_id,
+          SUM(total_amount)               AS amount
         FROM civicrm_contribution
-        LEFT JOIN civicrm_contact ON civicrm_contact.id = civicrm_contribution.contact_id
+        LEFT JOIN civicrm_contact       ON civicrm_contact.id = civicrm_contribution.contact_id
+        LEFT JOIN civicrm_group_contact ON civicrm_group_contact.contact_id = civicrm_contribution.contact_id
+                                        AND civicrm_group_contact.group_id IN ({$excluded_group_ids})
+                                        AND civicrm_group_contact.status = 'Added'
         {$bpk_join}
         WHERE {$where_clause}
-        GROUP BY contact_id;";
+        GROUP BY civicrm_contribution.contact_id;";
     // error_log("T1: {$eligible_donation_query}");
     CRM_Core_DAO::executeQuery($eligible_donation_query);
     CRM_Core_DAO::executeQuery("ALTER TABLE `{$eligible_donations}` ADD INDEX `contact_id` (`contact_id`);");
