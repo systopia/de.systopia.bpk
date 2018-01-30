@@ -27,12 +27,14 @@ class SoapTester {
   private $soapClient;
   private $location;
   private $uri;
+  private $certificate_password;
 
   private $soap_options;
 
   public function __construct() {
     $this->wsdl = "SZR.WSDL";
     $this->ns = "http://egov.gv.at/pvp1.xsd";
+    $this->certificate_password = "PASSWORD";
 
     // pro
     //    $this->location = "https://pvawp.bmi.gv.at/bmi.gv.at/soap/SZ2Services/services/SZR";
@@ -46,11 +48,16 @@ class SoapTester {
     //     'local_pk'   => 'TODO'
     //     ]
     //   ]);
-    $this->local_cert = "certs/N-000-318-p-331-2017-05-16.p12";
+    $this->local_cert = "certs/greenpeace_bpk.pem";
+//    $this->local_cert = "certs/N-000-318-p-331-2017-05-16.p12";
 
+    // Test Environment
     $this->location = "https://pvawp.bmi.gv.at/at.gv.bmi.szrsrv-b/services/SZR";
-    // $this->location = "https://pvawp.bmi.gv.at/bmi.gv.at/soap/SZ2Services-T/services/SZR";
-    // $this->location = "https://pvawp.bmi.gv.at/bmi.gv.at/soap/SZ2Services/services/SZR";
+    // produktiv Environment
+//     $this->location = "https://pvawp.bmi.gv.at/bmi.gv.at/soap/SZ2Services/services/SZR";
+
+    // previous
+    //     $this->location = "https://pvawp.bmi.gv.at/bmi.gv.at/soap/SZ2Services-T/services/SZR";
 
     $this->uri = "urn:SZRServices";
 
@@ -62,6 +69,7 @@ class SoapTester {
       "cache_wsdl" => WSDL_CACHE_NONE,
       "soap_version"  => SOAP_1_1,
 //      'use' => SOAP_LITERAL,
+      'passphrase'    => $this->certificate_password,
       "location" => $this->location,
       "uri" => $this->uri,
     );
@@ -80,14 +88,14 @@ class SoapTester {
   private function createSoapHeader() {
     $xml = new XMLWriter();
     $xml->openMemory();
-    $name = 'pvp1'; //"http://egov.gv.at/pvp1.xsd";
+    $name = 'pvp'; //"http://egov.gv.at/pvp1.xsd";
 
-    $xml->startElementNS('secext', 'Security', 'http://schemas.xmlsoap.org/ws/2002/04/secext');
+    $xml->startElementNS('wsse', 'Security', 'http://schemas.xmlsoap.org/ws/2002/04/secext');
       $xml->startElementNS($name, "pvpToken", 'http://egov.gv.at/pvp1.xsd');
       $xml->writeAttribute('version', "1.8");
         $xml->startElementNS($name, "authenticate", NULL);
           $xml->startElementNS($name, "participantId", NULL);
-            $xml->Text("AT:VKZ:XZVR-432857691");
+            $xml->Text("AT:VKZ:XZVR-961128260");
           $xml->endElement();
           $xml->startElementNS($name, "userPrincipal", NULL);
             $xml->startElementNS($name, "userId", NULL);
@@ -132,10 +140,10 @@ class SoapTester {
 
     $xml = new XMLWriter();
     $xml->openMemory();
-    $name = 'pdata'; // "http://reference.e-government.gv.at/namespace/persondata/20020228#";
-    $def_name = 'szrsrvs'; // "urn:SZRServices";
+    $name = 'p'; // "http://reference.e-government.gv.at/namespace/persondata/20020228#";
+    $def_name = 'ns1'; // "urn:SZRServices";
 
-    $xml->startElementNS($def_name, "GetBPK", "urn:SZRServices");
+//    $xml->startElementNS($def_name, "GetBPK", NULL);
       $xml->startElementNS($def_name, "PersonInfo", NULL);
         $xml->startElementNS($def_name, "Person", NULL);
           $xml->startElementNS($name, "Name", "http://reference.e-government.gv.at/namespace/persondata/20020228#");
@@ -146,16 +154,16 @@ class SoapTester {
               $xml->Text($contact['last_name']);
             $xml->endElement();
           $xml->endElement();
-          // $xml->startElementNS($name, "DateOfBirth", NULL);
-          //   $xml->Text($contact['birth_date']);
-          // $xml->endElement();
+           $xml->startElementNS($name, "DateOfBirth", NULL);
+             $xml->Text($contact['birth_date']);
+           $xml->endElement();
         $xml->endElement();
       $xml->endElement();
       $xml->startElementNS($def_name, "BereichsKennung", NULL);
-        $xml->Text("urn:publicid:gv.at:wbpk+XZVR-432857691");
+        $xml->Text("urn:publicid:gv.at:wbpk+XZVR+961128260");
       $xml->endElement();
       $xml->startElementNS($def_name, "VKZ", NULL);
-        $xml->Text("XZVR+432857691");
+        $xml->Text("XZVR-961128260");
       $xml->endElement();
       $xml->startElementNS($def_name, "Target", NULL);
         $xml->startElementNS($def_name, "BereichsKennung", NULL);
@@ -165,7 +173,7 @@ class SoapTester {
           $xml->Text("BMF");
         $xml->endElement();
       $xml->endElement();
-    $xml->endElement();
+//    $xml->endElement();
 
     $soap_body = new SoapVar($xml->outputMemory(), XSD_ANYXML);
     return $soap_body;
@@ -196,8 +204,10 @@ class SoapTester {
   try{
 //    $response = $this->soapClient->GetBPK($this->wsdl, $soap_request_data);
     $response = $this->soapClient->__soapCall("GetBPK", array($soap_request_data));
+    print "AFTER RESPONSE";
 
   } catch(SoapFault $fault) {
+    print "IN EXCEPTION";
     print "\n\nRequest: \n";
     print $this->soapClient->__getLastRequest();
     print "\nResponse: \n";
