@@ -79,7 +79,8 @@ class SoapTester {
   private function initializeSoapClient() {
 
     // echo "$this->wsdl\n";
-    $this->soapClient = new mySOAPClient(NULL, $this->soap_options);
+//    $this->soapClient = new mySOAPClient(NULL, $this->soap_options);
+    $this->soapClient = new mySOAPClient($this->wsdl, $this->soap_options);
     // $this->soapClient->__setLocation($this->location); // see https://stackoverflow.com/questions/28918666/unable-to-parse-url-exception-after-soap-request
     $this->createSoapHeader();
   }
@@ -142,11 +143,11 @@ class SoapTester {
     $xml->openMemory();
     $name = 'p'; // "http://reference.e-government.gv.at/namespace/persondata/20020228#";
     $def_name = 'ns1'; // "urn:SZRServices";
-
-//    $xml->startElementNS($def_name, "GetBPK", NULL);
+    $xml->startElementNS($def_name, "GetBPK", NULL);
+    $xml->writeAttributeNS ("xmlns", $name, NULL, "http://reference.e-government.gv.at/namespace/persondata/20020228#");
       $xml->startElementNS($def_name, "PersonInfo", NULL);
         $xml->startElementNS($def_name, "Person", NULL);
-          $xml->startElementNS($name, "Name", "http://reference.e-government.gv.at/namespace/persondata/20020228#");
+          $xml->startElementNS($name, "Name", NULL);
             $xml->startElementNS($name, "GivenName", NULL);
               $xml->Text($contact['first_name']);
             $xml->endElement();
@@ -173,7 +174,7 @@ class SoapTester {
           $xml->Text("BMF");
         $xml->endElement();
       $xml->endElement();
-//    $xml->endElement();
+    $xml->endElement();
 
     $soap_body = new SoapVar($xml->outputMemory(), XSD_ANYXML);
     return $soap_body;
@@ -204,7 +205,6 @@ class SoapTester {
   try{
 //    $response = $this->soapClient->GetBPK($this->wsdl, $soap_request_data);
     $response = $this->soapClient->__soapCall("GetBPK", array($soap_request_data));
-    print "AFTER RESPONSE";
 
   } catch(SoapFault $fault) {
     print "IN EXCEPTION";
@@ -220,6 +220,9 @@ class SoapTester {
     print $fault->getTraceAsString();
     print "\n";
   }
+  print "We made it. one successfull call to the bloody BMI.\n Repsonse:\n";
+  print $this->soapClient->__getLastResponse();
+
 
 
     //    echo json_encode($response) . "\n";
@@ -229,8 +232,13 @@ class SoapTester {
 $contact_data = array(
   'first_name' => 'XXXTest',
   'last_name'  => 'XXXSZR',
-  'birth_date' => '1960-04-04',
+  'birth_date' => '2000-09-09',
 );
+//$contact_data = array(
+//  'first_name' => 'Max',
+//  'last_name'  => 'Muster',
+//  'birth_date' => '2000-07-07',
+//);
 $myTester = new SoapTester();
 
 echo "Starting soap call\n";
