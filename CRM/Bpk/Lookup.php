@@ -46,7 +46,7 @@ abstract class CRM_Bpk_Lookup {
   }
 
   /**
-   *
+   * Generate a simple public result structure
    */
   protected function getResult() {
     return array(
@@ -116,9 +116,19 @@ abstract class CRM_Bpk_Lookup {
    */
   protected function executeLookupFor($sql) {
     // Actually execute query for results
-    $cursor = CRM_Core_DAO::executeQuery($sql);
-    while ($cursor->fetch()) {
-      $result = $this->getBpkResult($cursor);
+    $contact = CRM_Core_DAO::executeQuery($sql);
+    while ($contact->fetch()) {
+      // query the contact
+      $result = $this->getBpkResult($contact);
+
+      // update stats
+      if (empty($result) || !empty($result['bpk_error_code'])) {
+        $this->failed += 1;
+      } else {
+        $this->success += 1;
+      }
+
+      // store the data
       $this->storeResult($result);
     }
   }
@@ -150,27 +160,19 @@ abstract class CRM_Bpk_Lookup {
     }
   }
 
-//  protected function getBpkResult($contact) {
-//    // TODO: SOAP lookup
-//    return array(
-//      'bPK' => '',
-//      'error_code' => '',
-//      'contact_id' => $contact->contact_id,
-//    );
-//  }
-
   /**
    * Store result in contact
    */
   protected function storeResult($result) {
-    // TODO: ADJUST TO RESULT STRUCTURE
-    // THIS IS BOILER PLATE
+    // TODO: TEST
     $update = array(
-      'id'                   => $result['contact_id'],
-      'mygropup.bpk'         => $result['bPK'],
-      'mygropup.vbpk'        => $result['vbPK'],
-      'mygropup.status'      => $result['status'],
-      'mygropup.lookup_date' => date('YmdHis')
+      'id'                 => $result['contact_id'],
+      'bpk.bpk_extern'     => $result['bpk_extern'],
+      'bpk.vbpk'           => $result['vbpk'],
+      'bpk.bpk_status'     => $result['bpk_status'],
+      'bpk.bpk_error_code' => $result['bpk_error_code'],
+      'bpk.bpk_error_note' => $result['bpk_error_note'],
+      // 'bpk.lookup_date' => date('YmdHis')
     );
     CRM_Bpk_CustomData::resolveCustomFields($update);
     civicrm_api3('Contact', 'create', $update);
