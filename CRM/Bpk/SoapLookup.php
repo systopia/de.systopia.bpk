@@ -125,6 +125,8 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
    * @param $contact DAO object with first_name, last_name, birth_date
    *
    * @return array with the following parameters:
+   *               contact_id       Contact ID
+   *               bpk_extern       bPK            (empty string if not resolved)
    *               bpk_extern       bPK            (empty string if not resolved)
    *               vbpk             vbPK           (empty string if not resolved)
    *               bpk_status       status         (OptionGroup bpk_status)

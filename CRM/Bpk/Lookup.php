@@ -17,10 +17,11 @@
 
 abstract class CRM_Bpk_Lookup {
 
-  protected $success = 0;
-  protected $failed  = 0;
-  protected $params  = NULL;
-  protected $config  = NULL;
+  protected $success     = 0;
+  protected $failed      = 0;
+  protected $contact_ids = array();
+  protected $params      = NULL;
+  protected $config      = NULL;
 
   protected function __construct($params = NULL) {
     // TODO: if
@@ -50,8 +51,9 @@ abstract class CRM_Bpk_Lookup {
    */
   protected function getResult() {
     return array(
-      'success' => $this->success,
-      'failed'  => $this->failed,
+      'success'     => $this->success,
+      'failed'      => $this->failed,
+      'contact_ids' => implode(',', $this->contact_ids)
     );
   }
 
@@ -122,10 +124,16 @@ abstract class CRM_Bpk_Lookup {
       $result = $this->getBpkResult($contact);
 
       // update stats
-      if (empty($result) || !empty($result['bpk_error_code'])) {
-        $this->failed += 1;
-      } else {
+      if (empty($result['contact_id'])) {
+        throw new Exception("Internal error: incomplete result");
+      }
+
+      $this->contact_ids[] = $result['contact_id'];
+      if (empty($result['bpk_error_code'])) {
         $this->success += 1;
+
+      } else {
+        $this->failed += 1;
       }
 
       // store the data
@@ -139,6 +147,7 @@ abstract class CRM_Bpk_Lookup {
    * @param $contact DAO object with first_name, last_name, birth_date
    *
    * @return array with the following parameters:
+   *               contact_id       Contact ID
    *               bpk_extern       bPK            (empty string if not resolved)
    *               vbpk             vbPK           (empty string if not resolved)
    *               bpk_status       status         (OptionGroup bpk_status)
