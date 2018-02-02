@@ -36,28 +36,11 @@ class SoapTester {
     $this->ns = "http://egov.gv.at/pvp1.xsd";
     $this->certificate_password = "PASSWORD";
 
-    // pro
-    //    $this->location = "https://pvawp.bmi.gv.at/bmi.gv.at/soap/SZ2Services/services/SZR";
-    // dev
-    //    $this->location = "https://pvawp.bmi.gv.at/bmi.gv.at/soap/SZ2Services-T/services/SZR";
-
-    // see https://php.net/manual/de/soapclient.soapclient.php#120888
-    // $context = stream_context_create([
-    //   'ssl' => [
-    //     'local_cert' => 'certs/N-000-318-p-331-2017-05-16.p12',
-    //     'local_pk'   => 'TODO'
-    //     ]
-    //   ]);
     $this->local_cert = "certs/certificate.pem";
-//    $this->local_cert = "certs/N-000-318-p-331-2017-05-16.p12";
-
     // Test Environment
     $this->location = "https://pvawp.bmi.gv.at/at.gv.bmi.szrsrv-b/services/SZR";
     // produktiv Environment
 //     $this->location = "https://pvawp.bmi.gv.at/bmi.gv.at/soap/SZ2Services/services/SZR";
-
-    // previous
-    //     $this->location = "https://pvawp.bmi.gv.at/bmi.gv.at/soap/SZ2Services-T/services/SZR";
 
     $this->uri = "urn:SZRServices";
 

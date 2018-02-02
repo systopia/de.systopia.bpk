@@ -24,9 +24,11 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
 
   private $wsdl;
   private $ns;
-  private $location;
-  private $options;
+  private $soap_options;
   private $soapClient;
+  private $local_cert;
+  private $certificate_password;
+  private $pw_file;
 
   /**
    * CRM_Bpk_SoapLookup constructor.
@@ -35,24 +37,29 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
    */
   protected function __construct($params) {
     parent::__construct($params);
-    // TODO: initialize SOAP controller
+
+    $this->ns = dirname(__DIR__) . DIRECTORY_SEPARATOR . "../resources/soap/pvp1.xsd";
     $this->wsdl = dirname(__DIR__) . DIRECTORY_SEPARATOR . "../resources/soap/SZR.WSDL";
-    $this->initializeSoapClient();
-  }
+    $this->local_cert = dirname(__DIR__) . DIRECTORY_SEPARATOR . "../resources/certs/certificate.pem";
+    $this->pw_file = dirname(__DIR__) . DIRECTORY_SEPARATOR . "../resources/certs/pw.txt";
 
-  private function initializeSoapClient() {
-    // needed? disable wsdl cache, check that, maybe make this configurable
-    //                             depending on local config
-    // ini_set("soap.wsdl_cache_enabled", "0");
+    $file_content= explode("\n", file_get_contents($this->pw_file));
+    $this->certificate_password = array_pop(array_reverse($file_content));
 
-    CRM_Core_Error::debug("INITIALIZE SOAP Client: " . $this->wsdl);
-    CRM_Core_Error::debug("SOAP Client Options: " . json_encode($this->options));
-
-
-    // FixMe: Need uri/location here??
-    // TODO: Exception Handling
-//    $this->soapClient = new SoapClient($this->wsdl, $this->options);
-    $this->soapClient = new SoapClient($this->wsdl);
+    $this->soap_options = array(
+      "trace"         => 1,
+      "exceptions"    => true,
+      "local_cert"    => $this->local_cert,
+      // "context"       => $context,
+      "cache_wsdl" => WSDL_CACHE_NONE,
+      "soap_version"  => SOAP_1_1,
+      //      'use' => SOAP_LITERAL,
+      'passphrase'    => $this->certificate_password,
+      "location" => $this->location,
+      "uri" => $this->uri,
+    );
+    // craete Soap-Client Object
+    $this->soapClient = new SoapClient($this->wsdl, $this->soap_options);
     $this->createSoapHeader();
   }
 
@@ -110,13 +117,51 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
   }
 
   /**
-   * Debug function to print available soap functions to error log
+   * @param $contact (DAO object with first_name, last_name and birth_date)
+   *
+   * @return \SoapVar
    */
-  public function debugSOAPFunctions() {
-    $functions = $this->soapClient->__getFunctions();
-    // TODO: Maybe don't do this in error log, might be cut off --> Move to CiviCRM Log
-    error_log("Debug, soap functions: " . json_encode($functions));
-    CRM_Core_Error::debug("DEBUG: " . json_encode($functions));
+  private function createSoapBody($contact) {
+
+    $xml = new XMLWriter();
+    $xml->openMemory();
+    $name = 'p'; // "http://reference.e-government.gv.at/namespace/persondata/20020228#";
+    $def_name = 'ns1'; // "urn:SZRServices";
+    $xml->startElementNS($def_name, "GetBPK", NULL);
+    $xml->writeAttributeNS ("xmlns", $name, NULL, "http://reference.e-government.gv.at/namespace/persondata/20020228#");
+      $xml->startElementNS($def_name, "PersonInfo", NULL);
+        $xml->startElementNS($def_name, "Person", NULL);
+          $xml->startElementNS($name, "Name", NULL);
+            $xml->startElementNS($name, "GivenName", NULL);
+              $xml->Text($contact['first_name']);
+            $xml->endElement();
+            $xml->startElementNS($name, "FamilyName", NULL);
+              $xml->Text($contact['last_name']);
+            $xml->endElement();
+          $xml->endElement();
+          $xml->startElementNS($name, "DateOfBirth", NULL);
+            $xml->Text($contact['birth_date']);
+          $xml->endElement();
+        $xml->endElement();
+      $xml->endElement();
+      $xml->startElementNS($def_name, "BereichsKennung", NULL);
+        $xml->Text("urn:publicid:gv.at:wbpk+XZVR+961128260");
+      $xml->endElement();
+      $xml->startElementNS($def_name, "VKZ", NULL);
+        $xml->Text("XZVR-961128260");
+      $xml->endElement();
+      $xml->startElementNS($def_name, "Target", NULL);
+        $xml->startElementNS($def_name, "BereichsKennung", NULL);
+          $xml->Text("urn:publicid:gv.at:cdid+SA");
+        $xml->endElement();
+        $xml->startElementNS($def_name, "VKZ", NULL);
+          $xml->Text("BMF");
+        $xml->endElement();
+      $xml->endElement();
+    $xml->endElement();
+
+    $soap_body = new SoapVar($xml->outputMemory(), XSD_ANYXML);
+    return $soap_body;
   }
 
   /**
@@ -132,60 +177,30 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
    *               bpk_error_note   error message  (empty string if no error)
    */
   public function getBpkResult($contact) {
-    // TODO: use BAO
-    error_log("querying for contact " . json_encode($contact));
+
     // TODO: setup a single soap request
     if (!isset($contact->first_name) || !isset($contact->last_name) || !isset($contact->birth_date)) {
       throw new Exception("Necessary Attributes aren't in array. Aborting transaction", 1);
     }
-
-    $soap_request_data = array(
-      'PersonInfo' => array(
-        'Person' => array(
-          'Name' => array(
-            'GivenName' => $contact->first_name,
-            'FamilyName' => $contact->last_name,
-          ),
-          // TODO: FORMAT!!
-          'DateOfBirth' => $contact->birth_date,
-        )
-      ),
-      // TODO --> get values from config class here
-      'Bereichskennung' => 'woot??',
-      'VKZ' => 'vkz',
-      'target' => array(
-        'BereichsKennung' => 'urn:publicid:gv.at:cdid+SA',
-        'VKZ' => 'BMF',
-      )
-    );
-    error_log("Executing Querry");
-    // TODO: execute soap request now
-//    GetBPK   <-- function
-    // get function form wqsdl, and call via soap object
-//    try {
-      $this->soapClient->GetBPK($this->wsdl, $soap_request_data);
-//    } catch (Exception $e) {
-      CRM_Core_Error::debug(json_encode(htmlspecialchars($e)));
-      error_log("Request: " . json_encode($this->soapClient->__getLastRequest()));
-      error_log("Response: " . json_encode($this->soapClient->__getLastResponse()));
-//    }
-    error_log("finished Querry");
+    $soap_request_data = $this->createSoapBody($contact);
+    try{
+      //    $response = $this->soapClient->GetBPK($this->wsdl, $soap_request_data);
+      $response = $this->soapClient->__soapCall("GetBPK", array($soap_request_data));
+    } catch(SoapFault $fault) {
+      // debug Code
+//      print "\n\nRequest: \n";
+//      print $this->soapClient->__getLastRequest();
+//      print "\nResponse: \n";
+//      print $this->soapClient->__getLastResponse();
+//      print "\nFault Code: \n";
+//      print $fault->faultcode;
+//      print "\nMessage: \n";
+//      print $fault->getMessage();
+//      print "\nDetail: \n";
+//      print $fault->getTraceAsString();
+//      print "\n";
+    }
+    // TODO: parse response; return array ('contact_id] => array ( ))
   }
 
-  /**
-   * creates a SOAP request
-   */
-  public function createSoapRequest() {
-
-  }
-
-  /**
-   * @param $request
-   *
-   * @return result request
-   * executes the given request, return the result
-   */
-  public function executeSoapRequest($request) {
-
-  }
 }
