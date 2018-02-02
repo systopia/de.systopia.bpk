@@ -77,7 +77,7 @@ abstract class CRM_Bpk_Lookup {
       // TODO: implement selection criteria
       $where_clauses_OR[] = "contact.birth_date IS NOT NULL";
       $where_clauses_OR[] = "contact.first_name IS NOT NULL";
-      $where_clauses_OR[] = "contact.last_name IS NOT NULL";
+      $where_clauses_OR[] = "contact.last_name  IS NOT NULL";
     }
 
     $table_name = $this->config->getTableName();
@@ -102,45 +102,28 @@ abstract class CRM_Bpk_Lookup {
   }
 
   /**
-   *
+   * Run the lookup based on the query
    */
   protected function executeLookupFor($sql) {
-    // FixME: Debug Code
-    $data = $this->static_lookup_Data();
-    $result = $this->getBpkResult($data);
-    // TODO: Output to CiviCRM log here
-    CRM_Core_Error::debug(json_encode($result));
-    return;
-    // debug code end
-
     // Actually execute query for results
     $cursor = CRM_Core_DAO::executeQuery($sql);
     while ($cursor->fetch()) {
-      // $cursor->first_name, ...
-      // TODO:
       $result = $this->getBpkResult($cursor);
       $this->storeResult($result);
     }
   }
 
   /**
-   * Test data is taken from ZMR Sample Data
-   * @return array
-   */
-  protected function static_lookup_Data() {
-    $static_data = array(
-      'first_name' => 'XXXTest',
-      'last_name'  => 'XXXSZR',
-      'birth_date' => '1960-04-04',
-    );
-    return $static_data;
-  }
-
-  /**
-   * @param $contact
+   * Perform the actual bpk lookup for the contact
    *
-   * @return mixed result, either array with error code,
-   *         or the contact information with the bpk and v_bpk
+   * @param $contact DAO object with first_name, last_name, birth_date
+   *
+   * @return array with the following parameters:
+   *               bpk_extern       bPK            (empty string if not resolved)
+   *               vbpk             vbPK           (empty string if not resolved)
+   *               bpk_status       status         (OptionGroup bpk_status)
+   *               bpk_error_code   error code     (empty string if no error)
+   *               bpk_error_note   error message  (empty string if no error)
    */
   protected abstract function getBpkResult($contact);
 
@@ -170,10 +153,12 @@ abstract class CRM_Bpk_Lookup {
    * Store result in contact
    */
   protected function storeResult($result) {
-    // TODO: does it work?
+    // TODO: ADJUST TO RESULT STRUCTURE
+    // THIS IS BOILER PLATE
     $update = array(
       'id'                   => $result['contact_id'],
       'mygropup.bpk'         => $result['bPK'],
+      'mygropup.vbpk'        => $result['vbPK'],
       'mygropup.status'      => $result['status'],
       'mygropup.lookup_date' => date('YmdHis')
     );

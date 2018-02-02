@@ -66,13 +66,16 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
    */
   // FixMe: default value for contact_id is for testing purposes
   private function getPersonData($contact_id = '2', $options = array()) {
-    $result = civicrm_api3('Contact', 'getsingle', array(
-      'sequential' => 1,
-      'id' => $contact_id,
-    ));
-    if (isset($result['is_error'])) {
-      throw new Exception("Couldn't find Contact with id {$contact_id}. Aborting lookup");
+    try {
+      $result = civicrm_api3('Contact', 'getsingle', array(
+        'sequential' => 1,
+        'id'         => $contact_id,
+        'return'     => 'first_name,last_name,birth_date'
+      ));
+    } catch (Exception $e) {
+      throw new Exception("Contact not found", 1);
     }
+
     $bpk_parameters = array(
       'first_name'  => $result['first_name'],
       'last_name'   => $result['last_name'],
@@ -142,9 +145,19 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
   }
 
   /**
-   * @param $contact array('first_name', 'last_name', 'birth_date')
+   * Perform the actual bpk lookup for the contact
+   *
+   * @param $contact DAO object with first_name, last_name, birth_date
+   *
+   * @return array with the following parameters:
+   *               bpk_extern       bPK            (empty string if not resolved)
+   *               vbpk             vbPK           (empty string if not resolved)
+   *               bpk_status       status         (OptionGroup bpk_status)
+   *               bpk_error_code   error code     (empty string if no error)
+   *               bpk_error_note   error message  (empty string if no error)
    */
   public function getBpkResult($contact) {
+    // TODO: use BAO
     error_log("querrying for contact " . json_encode($contact));
     // TODO: setup a single soap request
     if (!isset($contact['first_name']) || !isset($contact['last_name']) || !isset($contact['birth_date'])) {
