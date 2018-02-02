@@ -1,3 +1,4 @@
 soapTester/certs
 .idea
 soapTester/example
+resources/certs/*.pem
