@@ -102,9 +102,9 @@ abstract class CRM_Bpk_Lookup {
              contact.id         AS contact_id,
              contact.first_name AS first_name,
              contact.last_name  AS last_name,
-             contact.birth_date AS birth_date,
+             contact.birth_date AS birth_date
             FROM civicrm_contact contact
-            LEFT JOIN {$table_name} bpk_group ON bpk_group.entity_id = contact.id
+            LEFT JOIN {$table_name} AS bpk_group ON bpk_group.entity_id = contact.id
             WHERE (({$where_sql}))
             {$limit_sql}";
 
