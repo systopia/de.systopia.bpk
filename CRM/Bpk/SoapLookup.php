@@ -28,15 +28,6 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
   private $options;
   private $soapClient;
 
-  // TODO: debug last request/response
-//REQUEST :
-//" . htmlspecialchars($client->__getLastRequest()) . "
-//");
-//   //echo("
-//RESPONSE:
-//" .htmlspecialchars($client->__getLastResponse()) . "
-//");
-
   /**
    * CRM_Bpk_SoapLookup constructor.
    *
@@ -73,24 +64,48 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
     $config = CRM_Bpk_Config::singleton();
     $soapHeaderParameters = $config->getSoapHeaderSettings();
 
-    $headerBody = array(
-      'authenticate' => array(
-        'participantId'     => $soapHeaderParameters['soap_header_participantId'],
-        'pvpPrincipalType'  => array(
-          'userId'      => $soapHeaderParameters['soap_header_userId'],
-          'cn'          => $soapHeaderParameters['soap_header_cn'],
-          'gvOuId'      => $soapHeaderParameters['soap_header_gvOuId'],
-          'gvGid'       => $soapHeaderParameters['soap_header_gvGid'],
-          'ou'          => $soapHeaderParameters['soap_header_ou'],
-          'gvSecClass'  => '2',  // TODO ?? copied from example
-        )
-      ),
-      'authorize' => array(
-        'role' => array('value' => 'szr-bpk-abfrage'),
-      )
-    );
+    $xml = new XMLWriter();
+    $xml->openMemory();
+    $name = 'pvp'; //"http://egov.gv.at/pvp1.xsd";
 
-    $soap_header = new SOAPHeader($this->ns, 'requestHeader', $headerBody);
+    $xml->startElementNS('wsse', 'Security', 'http://schemas.xmlsoap.org/ws/2002/04/secext');
+      $xml->startElementNS($name, "pvpToken", 'http://egov.gv.at/pvp1.xsd');
+      $xml->writeAttribute('version', "1.8");
+        $xml->startElementNS($name, "authenticate", NULL);
+          $xml->startElementNS($name, "participantId", NULL);
+            $xml->Text($soapHeaderParameters['soap_header_participantId']);
+          $xml->endElement();
+          $xml->startElementNS($name, "userPrincipal", NULL);
+            $xml->startElementNS($name, "userId", NULL);
+              $xml->Text($soapHeaderParameters['soap_header_userId']);
+            $xml->endElement();
+            $xml->startElementNS($name, "cn", NULL);
+              $xml->Text($soapHeaderParameters['soap_header_cn']);
+            $xml->endElement();
+            $xml->startElementNS($name, "gvOuId", NULL);
+              $xml->Text($soapHeaderParameters['soap_header_gvOuId']);
+            $xml->endElement();
+            $xml->startElementNS($name, "ou", NULL);
+              $xml->Text($soapHeaderParameters['soap_header_ou']);
+            $xml->endElement();
+            $xml->startElementNS($name, "gvSecClass", NULL);
+              $xml->Text("2");
+            $xml->endElement();
+            $xml->startElementNS($name, "gvGid", NULL);
+              $xml->Text($soapHeaderParameters['soap_header_gvGid']);
+            $xml->endElement();
+          $xml->endElement();
+        $xml->endElement();
+        $xml->startElementNS($name, "authorize", NULL);
+          $xml->startElementNS($name, "role", NULL);
+          $xml->writeAttribute('value', "szr-bpk-abfrage");
+          $xml->endElement();
+        $xml->endElement();
+      $xml->endElement();
+    $xml->endElement();
+
+    $headerBody = new SoapVar($xml->outputMemory(), XSD_ANYXML);
+    $soap_header = new SOAPHeader($this->ns, 'Header', $headerBody);
     $this->soapClient->__setSoapHeaders($soap_header);
   }
 
