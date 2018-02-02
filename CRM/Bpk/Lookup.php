@@ -67,22 +67,35 @@ abstract class CRM_Bpk_Lookup {
     $limit_sql = "LIMIT {$limit}";
 
     // contact_id (for testing)
-    if (!empty($this->params['contact_id'])) {
-      $contact_id = (int) $this->params['contact_id'];
-      $where_clauses_OR[] = "contact.id = {$contact_id}";
+    if (empty($this->params['contact_id'])) {
+      // generate WHERE clause
+      // bpk queries must always have first_name, last_name and birth_date
+      $where_clauses[] = "contact.birth_date IS NOT NULL";
+      $where_clauses[] = "contact.birth_date <> ''";
+      $where_clauses[] = "contact.first_name IS NOT NULL";
+      $where_clauses[] = "contact.first_name <> ''";
+      $where_clauses[] = "contact.last_name  IS NOT NULL";
+      $where_clauses[] = "contact.last_name  <> ''";
+
+      // ...the contact should be an individual
+      $where_clauses[] = "contact.contact_type = 'Individual'";
+
+      // ...not in the trash
+      $where_clauses[] = "contact.is_deleted = 0";
+
+      // restrict to unset values:
+      $where_clauses[] = "bpk_group.status     IS NULL OR bpk_group.status = 1";
+      $where_clauses[] = "bpk_group.bpk_extern IS NULL OR bpk_group.bpk_extern = ''";
+      $where_clauses[] = "bpk_group.vbpk       IS NULL OR bpk_group.vbpk = ''";
 
     } else {
-      // generate WHERE clause
-      // pba: bpk queries must always have first_name, last_name and birth_date
-      // TODO: implement selection criteria
-      $where_clauses_OR[] = "contact.birth_date IS NOT NULL";
-      $where_clauses_OR[] = "contact.first_name IS NOT NULL";
-      $where_clauses_OR[] = "contact.last_name  IS NOT NULL";
+      // this is a single contact call:
+      $contact_id = (int) $this->params['contact_id'];
+      $where_clauses[] = "contact.id = {$contact_id}";
     }
 
     $table_name = $this->config->getTableName();
-    $field_name = 'bpk'; // TODO: will this change?
-    $where_sql  = implode(') OR (', $where_clauses_OR);
+    $where_sql  = implode(') AND (', $where_clauses);
 
     // TODO: check if contact_type = 'Individual' and bpk_group.{$field_name} IS NULL is correct
     $sql = "SELECT
@@ -93,9 +106,6 @@ abstract class CRM_Bpk_Lookup {
             FROM civicrm_contact contact
             LEFT JOIN {$table_name} bpk_group ON bpk_group.entity_id = contact.id
             WHERE (({$where_sql}))
-            AND bpk_group.{$field_name} IS NULL
-            AND contact.is_deleted = 0
-            AND contact.contact_type = 'Individual'
             {$limit_sql}";
 
     return $sql;
