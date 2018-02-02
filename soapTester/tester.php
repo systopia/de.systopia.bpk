@@ -48,7 +48,7 @@ class SoapTester {
     //     'local_pk'   => 'TODO'
     //     ]
     //   ]);
-    $this->local_cert = "certs/greenpeace_bpk.pem";
+    $this->local_cert = "certs/certificate.pem";
 //    $this->local_cert = "certs/N-000-318-p-331-2017-05-16.p12";
 
     // Test Environment
