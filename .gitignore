@@ -2,3 +2,4 @@ soapTester/certs
 .idea
 soapTester/example
 resources/certs/*.pem
+resources/certs/pw.txt
