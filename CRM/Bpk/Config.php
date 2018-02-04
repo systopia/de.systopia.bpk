@@ -48,8 +48,9 @@ class CRM_Bpk_Config {
     if (!$settings) {
       // TODO: defaults
       return array(
-        'limit' => $this->limit,
-        'key'   => 'enter key here');
+        'limit'                 => $this->limit,
+        'key'                   => 'enter key here',
+        'soap_header_namespace' => "http://egov.gv.at/pvp1.xsd");
     } else {
       return $settings;
     }

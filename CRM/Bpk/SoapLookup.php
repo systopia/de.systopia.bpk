@@ -29,6 +29,7 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
   private $local_cert;
   private $certificate_password;
   private $pw_file;
+  private $location;
 
   /**
    * CRM_Bpk_SoapLookup constructor.
@@ -38,7 +39,13 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
   protected function __construct($params) {
     parent::__construct($params);
 
-    $this->ns = dirname(__DIR__) . DIRECTORY_SEPARATOR . "../resources/soap/pvp1.xsd";
+    // TEST SERVER
+    $this->location = "https://pvawp.bmi.gv.at/at.gv.bmi.szrsrv-b/services/SZR";
+    // PRODUCTION SERVER:
+    // $this->location = "https://pvawp.bmi.gv.at/bmi.gv.at/soap/SZ2Services/services/SZR";
+
+    // default value; if configured this will be overwritten in createSoapHeader
+    $this->ns = "http://egov.gv.at/pvp1.xsd";
     $this->wsdl = dirname(__DIR__) . DIRECTORY_SEPARATOR . "../resources/soap/SZR.WSDL";
     $this->local_cert = dirname(__DIR__) . DIRECTORY_SEPARATOR . "../resources/certs/certificate.pem";
     $this->pw_file = dirname(__DIR__) . DIRECTORY_SEPARATOR . "../resources/certs/pw.txt";
@@ -67,9 +74,13 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
    * create SOAP Header from $config data
    */
   private function createSoapHeader() {
-    error_log("in createSoapHeader");
     $config = CRM_Bpk_Config::singleton();
     $soapHeaderParameters = $config->getSoapHeaderSettings();
+    error_log("in createSoapHeader. Parameters: " . json_encode($soapHeaderParameters));
+
+    if (isset($soapHeaderParameters['soap_header_namespace'])) {
+      $this->ns = $soapHeaderParameters['soap_header_namespace'];
+    }
 
     $xml = new XMLWriter();
     $xml->openMemory();
@@ -133,14 +144,14 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
         $xml->startElementNS($def_name, "Person", NULL);
           $xml->startElementNS($name, "Name", NULL);
             $xml->startElementNS($name, "GivenName", NULL);
-              $xml->Text($contact['first_name']);
+              $xml->Text($contact->first_name);
             $xml->endElement();
             $xml->startElementNS($name, "FamilyName", NULL);
-              $xml->Text($contact['last_name']);
+              $xml->Text($contact->last_name);
             $xml->endElement();
           $xml->endElement();
           $xml->startElementNS($name, "DateOfBirth", NULL);
-            $xml->Text($contact['birth_date']);
+            $xml->Text($contact->birth_date);
           $xml->endElement();
         $xml->endElement();
       $xml->endElement();
@@ -192,6 +203,7 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
       // debug Code
 //      print "\n\nRequest: \n";
 //      print $this->soapClient->__getLastRequest();
+      error_log("Last Request: " . $this->soapClient->__getLastRequest());
 //      print "\nResponse: \n";
 //      print $this->soapClient->__getLastResponse();
 //      print "\nFault Code: \n";
@@ -201,8 +213,12 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
 //      print "\nDetail: \n";
 //      print $fault->getTraceAsString();
 //      print "\n";
+      error_log("SOAP Exception. FaultCode: " . $fault->faultcode . "; Message: " . $fault->getMessage());
+      return array();
     }
     // TODO: parse response; return array ('contact_id] => array ( ))
+    error_log("soap call was successfull.");
+    return array();
   }
 
 }

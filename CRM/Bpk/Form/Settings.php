@@ -50,17 +50,20 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
       TRUE
     );
 
-    $this->add(
-      'text',
-      'key',
-      E::ts('Access Key'),
-      FALSE
-    );
+    // TODO: not needed?
+//    $this->add(
+//      'text',
+//      'key',
+//      E::ts('Access Key'),
+//      FALSE
+//    );
 
+    // TODO: create help message, or remove this part.
+    // this should only be changed if you know what you are doing, and maybe not even then
     $this->add(
         'text',
         'soap_header_namespace',
-      E::ts('SOAP-Namespace'),
+      E::ts('SOAP-Header-Namespace'),
       FALSE
     );
 
@@ -142,7 +145,8 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
         'soap_header_userId',
         'soap_header_cn',
         'soap_header_gvOuId',
-        'soap_header_gvGid'
+        'soap_header_gvGid',
+        'soap_header_ou',
       );
   }
 

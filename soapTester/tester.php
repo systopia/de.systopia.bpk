@@ -34,7 +34,10 @@ class SoapTester {
   public function __construct() {
     $this->wsdl = "SZR.WSDL";
     $this->ns = "http://egov.gv.at/pvp1.xsd";
-    $this->certificate_password = "PASSWORD";
+    $pw_file = "certs/pw.txt";
+
+    $file_content= explode("\n", file_get_contents($pw_file));
+    $this->certificate_password = array_pop(array_reverse($file_content));
 
     $this->local_cert = "certs/certificate.pem";
     // Test Environment
@@ -98,7 +101,7 @@ class SoapTester {
               $xml->Text("2");
             $xml->endElement();
             $xml->startElementNS($name, "gvGid", NULL);
-              $xml->Text("Greenpeace");
+                $xml->Text("Greenpeace");
             $xml->endElement();
           $xml->endElement();
         $xml->endElement();
@@ -202,6 +205,7 @@ class SoapTester {
     print "\nDetail: \n";
     print $fault->getTraceAsString();
     print "\n";
+    return;
   }
   print "We made it. one successfull call to the bloody BMI.\n Repsonse:\n";
   print $this->soapClient->__getLastResponse();
