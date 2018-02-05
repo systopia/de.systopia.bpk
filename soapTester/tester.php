@@ -191,6 +191,7 @@ class SoapTester {
   try{
 //    $response = $this->soapClient->GetBPK($this->wsdl, $soap_request_data);
     $response = $this->soapClient->__soapCall("GetBPK", array($soap_request_data));
+    print (json_encode($response));
 
   } catch(SoapFault $fault) {
     print "IN EXCEPTION";
@@ -210,8 +211,11 @@ class SoapTester {
   print "We made it. one successfull call to the bloody BMI.\n Repsonse:\n";
   print $this->soapClient->__getLastResponse();
 
+// example response as array
+//    {"GetBPKReturn":"VVqoWzZBSaHYBNcNLkzstKGYX3I=","FremdBPK":{"BereichsKennung":"urn:publicid:gv.at:ecdid+BMF+SA","FremdBPK":"GFzqsqrWGokccazOx6EL7Qnde9N+2xkcehN9AM1JjvDkyu+zXu3X6K6HDrrQMJXtUwlkejrnNWtq5j5Wg6BwnEdwZwxR9DoPyGNV3dF5gqkFM+4mtpfN4AdMQmDfCHg9rntiofHZ7sEl2Aa8EW8Z8WoWILA2zKAdrSDb5e379zw="}}
 
-
+    print "\n\nBPK: " . $response->GetBPKReturn;
+    print "\nvBPK: " . $response->FremdBPK->FremdBPK;
     //    echo json_encode($response) . "\n";
   }
 }

@@ -196,9 +196,19 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
       throw new Exception("Necessary Attributes aren't in array. Aborting transaction", 1);
     }
     $soap_request_data = $this->createSoapBody($contact);
+    $result = array("id"              => $contact->id,
+                    "bpk_extern"      => "",
+                    "vbpk"            => "",
+                    "bpk_status"      => "",
+                    "bpk_error_code"  => "",
+                    "bpk_error_note"  => "",
+    );
     try{
       //    $response = $this->soapClient->GetBPK($this->wsdl, $soap_request_data);
       $response = $this->soapClient->__soapCall("GetBPK", array($soap_request_data));
+      $result["bpk_status"]   = "resolved";
+      $result['bpk_extern']   = $response->GetBPKReturn;
+      $result['vbpk']         = $response->FremdBPK->FremdBPK;
     } catch(SoapFault $fault) {
       // debug Code
 //      print "\n\nRequest: \n";
@@ -214,11 +224,26 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
 //      print $fault->getTraceAsString();
 //      print "\n";
       error_log("SOAP Exception. FaultCode: " . $fault->faultcode . "; Message: " . $fault->getMessage());
-      return array();
+
+      $result_status = explode(":", $fault->faultcode)[1];
+      if ($result_status === "F230") {
+        // no match
+        $result["bpk_status"]   = "failed_no_match";
+      } else if ($result_status === "F231") {
+        // no unique lookup result
+        $result["bpk_status"]   = "failed_ambiguous";
+      } else {
+        $result["bpk_status"]   = "failed_error";
+      }
+      $result['bpk_error_code'] = $fault->faultcode;
+      $result['bpk_error_note'] = $fault->getMessage();
     }
     // TODO: parse response; return array ('contact_id] => array ( ))
-    error_log("soap call was successfull.");
-    return array();
+//    print "\n\nBPK: " . $response->GetBPKReturn;
+//    print "\nvBPK: " . $response->FremdBPK->FremdBPK;
+
+
+    return $result;
   }
 
 }
