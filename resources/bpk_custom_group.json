@@ -8,7 +8,7 @@
   "collapse_display": "0",
   "is_active": "1",
   "is_multiple": "0",
-  "table_name": "civicrm_values_bpk",
+  "table_name": "civicrm_value_bpk",
   "collapse_adv_display": "0",
   "is_reserved": "0",
   "_fields": [
