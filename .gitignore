@@ -1,0 +1,6 @@
+soapTester/certs
+.idea
+soapTester/example
+resources/certs
+certificate.pem
+pw.txt

@@ -38,11 +38,10 @@
         <div class="clear"></div>
     </div>
     <div class="crm-section">
-        <div class="label">{$form.key.label}</div>
-        <div class="content">{$form.key.html}</div>
+        <div class="label">{$form.soap_server_url.label}</div>
+        <div class="content">{$form.soap_server_url.html}</div>
         <div class="clear"></div>
     </div>
-
     <div class="crm-section">
         <div class="label">{$form.soap_header_namespace.label}</div>
         <div class="content">{$form.soap_header_namespace.html}</div>

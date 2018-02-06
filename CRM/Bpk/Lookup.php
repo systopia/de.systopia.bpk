@@ -17,10 +17,11 @@
 
 abstract class CRM_Bpk_Lookup {
 
-  protected $success = 0;
-  protected $failed  = 0;
-  protected $params  = NULL;
-  protected $config  = NULL;
+  protected $success     = 0;
+  protected $failed      = 0;
+  protected $contact_ids = array();
+  protected $params      = NULL;
+  protected $config      = NULL;
 
   protected function __construct($params = NULL) {
     // TODO: if
@@ -34,7 +35,7 @@ abstract class CRM_Bpk_Lookup {
    * @return array with results: ['success' => <count>, 'failed' => <count>]
    */
   public static function doSoapLookup($params) {
-    $runner = new CRM_Bpk_SoapLookup();
+    $runner = new CRM_Bpk_SoapLookup($params);
 
     // step 1: select eligible contacts
     $select_sql = $runner->createSelectionQuery();
@@ -46,12 +47,13 @@ abstract class CRM_Bpk_Lookup {
   }
 
   /**
-   *
+   * Generate a simple public result structure
    */
   protected function getResult() {
     return array(
-      'success' => $this->success,
-      'failed'  => $this->failed,
+      'success'     => $this->success,
+      'failed'      => $this->failed,
+      'contact_ids' => implode(',', $this->contact_ids)
     );
   }
 
@@ -67,78 +69,90 @@ abstract class CRM_Bpk_Lookup {
     $limit_sql = "LIMIT {$limit}";
 
     // contact_id (for testing)
-    if (!empty($this->params['contact_id'])) {
-      $contact_id = (int) $this->params['contact_id'];
-      $where_clauses_OR[] = "contact.id = {$contact_id}";
+    if (empty($this->params['contact_id'])) {
+      // generate WHERE clause
+      // bpk queries must always have first_name, last_name and birth_date
+      $where_clauses[] = "contact.birth_date IS NOT NULL";
+      $where_clauses[] = "contact.birth_date <> ''";
+      $where_clauses[] = "contact.first_name IS NOT NULL";
+      $where_clauses[] = "contact.first_name <> ''";
+      $where_clauses[] = "contact.last_name  IS NOT NULL";
+      $where_clauses[] = "contact.last_name  <> ''";
+
+      // ...the contact should be an individual
+      $where_clauses[] = "contact.contact_type = 'Individual'";
+
+      // ...not in the trash
+      $where_clauses[] = "contact.is_deleted = 0";
+
+      // restrict to unset values:
+      $where_clauses[] = "bpk_group.status     IS NULL OR bpk_group.status = 1";
+      $where_clauses[] = "bpk_group.bpk_extern IS NULL OR bpk_group.bpk_extern = ''";
+      $where_clauses[] = "bpk_group.vbpk       IS NULL OR bpk_group.vbpk = ''";
 
     } else {
-      // generate WHERE clause
-      // pba: bpk queries must always have first_name, last_name and birth_date
-      // TODO: implement selection criteria
-      $where_clauses_OR[] = "contact.birth_date IS NOT NULL";
-      $where_clauses_OR[] = "contact.first_name IS NOT NULL";
-      $where_clauses_OR[] = "contact.last_name IS NOT NULL";
+      // this is a single contact call:
+      $contact_id = (int) $this->params['contact_id'];
+      $where_clauses[] = "contact.id = {$contact_id}";
     }
 
     $table_name = $this->config->getTableName();
-    $field_name = 'bpk'; // TODO: will this change?
-    $where_sql  = implode(') OR (', $where_clauses_OR);
+    $where_sql  = implode(') AND (', $where_clauses);
 
     // TODO: check if contact_type = 'Individual' and bpk_group.{$field_name} IS NULL is correct
     $sql = "SELECT
              contact.id         AS contact_id,
              contact.first_name AS first_name,
              contact.last_name  AS last_name,
-             contact.birth_date AS birth_date,
+             contact.birth_date AS birth_date
             FROM civicrm_contact contact
-            LEFT JOIN {$table_name} bpk_group ON bpk_group.entity_id = contact.id
+            LEFT JOIN {$table_name} AS bpk_group ON bpk_group.entity_id = contact.id
             WHERE (({$where_sql}))
-            AND bpk_group.{$field_name} IS NULL
-            AND contact.is_deleted = 0
-            AND contact.contact_type = 'Individual'
             {$limit_sql}";
 
     return $sql;
   }
 
   /**
-   *
+   * Run the lookup based on the query
    */
   protected function executeLookupFor($sql) {
-    // FixME: Debug Code
-    $data = $this->static_lookup_Data();
-    $result = $this->getBpkResult($data);
-    // TODO: Output to CiviCRM log here
-    CRM_Core_Error::debug(json_encode($result));
-    return;
+    // Actually execute query for results
+    $contact = CRM_Core_DAO::executeQuery($sql);
+    while ($contact->fetch()) {
+      // query the contact
+      $result = $this->getBpkResult($contact);
 
-    $cursor = CRM_Core_DAO::executeQuery($sql);
-    while ($cursor->fetch()) {
-      // $cursor->first_name, ...
-      // TODO:
-      $result = $this->getBpkResult($cursor);
+      // update stats
+      if (empty($result['contact_id'])) {
+        throw new Exception("Internal error: incomplete result");
+      }
+
+      $this->contact_ids[] = $result['contact_id'];
+      if (empty($result['bpk_error_code'])) {
+        $this->success += 1;
+
+      } else {
+        $this->failed += 1;
+      }
+
+      // store the data
       $this->storeResult($result);
     }
   }
 
   /**
-   * Test data is taken from ZMR Sample Data
-   * @return array
-   */
-  protected function static_lookup_Data() {
-    $static_data = array(
-      'first_name' => 'XXXTest',
-      'last_name'  => 'XXXSZR',
-      'birth_date' => '1960-04-04',
-    );
-    return $static_data;
-  }
-
-  /**
-   * @param $contact
+   * Perform the actual bpk lookup for the contact
    *
-   * @return mixed result, either array with error code,
-   *         or the contact information with the bpk and v_bpk
+   * @param $contact DAO object with first_name, last_name, birth_date
+   *
+   * @return array with the following parameters:
+   *               contact_id       Contact ID
+   *               bpk_extern       bPK            (empty string if not resolved)
+   *               vbpk             vbPK           (empty string if not resolved)
+   *               bpk_status       status         (OptionGroup bpk_status)
+   *               bpk_error_code   error code     (empty string if no error)
+   *               bpk_error_note   error message  (empty string if no error)
    */
   protected abstract function getBpkResult($contact);
 
@@ -151,28 +165,23 @@ abstract class CRM_Bpk_Lookup {
     // todo: implement as loop, but override in subclass
     foreach ($contacts as $contact) {
       $result = $this->getBpkResult($contact);
+
     }
   }
-
-//  protected function getBpkResult($contact) {
-//    // TODO: SOAP lookup
-//    return array(
-//      'bPK' => '',
-//      'error_code' => '',
-//      'contact_id' => $contact->contact_id,
-//    );
-//  }
 
   /**
    * Store result in contact
    */
   protected function storeResult($result) {
-    // TODO: does it work?
+    // TODO: TEST
     $update = array(
-      'id'                   => $result['contact_id'],
-      'mygropup.bpk'         => $result['bPK'],
-      'mygropup.status'      => $result['status'],
-      'mygropup.lookup_date' => date('YmdHis')
+      'id'                 => $result['contact_id'],
+      'bpk.bpk_extern'     => $result['bpk_extern'],
+      'bpk.vbpk'           => $result['vbpk'],
+      'bpk.bpk_status'     => $result['bpk_status'],
+      'bpk.bpk_error_code' => $result['bpk_error_code'],
+      'bpk.bpk_error_note' => $result['bpk_error_note'],
+      // 'bpk.lookup_date' => date('YmdHis')
     );
     CRM_Bpk_CustomData::resolveCustomFields($update);
     civicrm_api3('Contact', 'create', $update);

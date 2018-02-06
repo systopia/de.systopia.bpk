@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema targetNamespace="http://egov.gv.at/pvp1.xsd" xmlns="http://egov.gv.at/pvp1.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:element name="pvpToken">
+		<xs:complexType>
+			<xs:complexContent>
+				<xs:extension base="pvpTokenType" />
+			</xs:complexContent>
+		</xs:complexType>
+	</xs:element>
+	<xs:complexType name="pvpTokenType">
+		<xs:sequence>
+			<xs:element name="authenticate">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="participantId" type="xs:string" />
+						<xs:element name="gvOuDomain" type="xs:string" minOccurs="0" maxOccurs="1" />
+						<xs:choice>
+							<xs:element name="userPrincipal">
+								<xs:complexType>
+									<xs:complexContent>
+										<xs:extension base="pvpPrincipalType">
+											<xs:sequence>
+												<xs:element name="gvGid" type="xs:string" />
+												<xs:element name="mail" type="xs:string" minOccurs="0" maxOccurs="1" />
+												<xs:element name="tel" type="xs:string" minOccurs="0" maxOccurs="1" />
+												<xs:element name="bpk" type="xs:string" minOccurs="0" maxOccurs="1" />
+												<xs:element name="gvFunction" type="xs:string" minOccurs="0" maxOccurs="1" />
+											</xs:sequence>
+										</xs:extension>
+									</xs:complexContent>
+								</xs:complexType>
+							</xs:element>
+							<xs:element name="systemPrincipal" type="pvpPrincipalType" />
+						</xs:choice>
+						<xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded">
+							<xs:annotation>
+								<xs:documentation>additional authentication properties</xs:documentation>
+							</xs:annotation>
+						</xs:any>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="authorize" minOccurs="0" maxOccurs="1">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:sequence minOccurs="0">
+							<xs:element name="gvOuId" type="xs:string" />
+							<xs:element name="ou" type="xs:string" />
+						</xs:sequence>
+						<xs:element name="role" maxOccurs="unbounded">
+							<xs:complexType>
+								<xs:sequence>
+									<xs:element name="param" minOccurs="0" maxOccurs="unbounded">
+										<xs:complexType>
+											<xs:sequence>
+												<xs:element name="key" type="xs:string" />
+												<xs:element name="value" type="xs:string" />
+											</xs:sequence>
+										</xs:complexType>
+									</xs:element>
+								</xs:sequence>
+								<xs:attribute name="value" type="xs:string" use="required" />
+							</xs:complexType>
+						</xs:element>
+						<xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded">
+							<xs:annotation>
+								<xs:documentation>additional authorization properties</xs:documentation>
+							</xs:annotation>
+						</xs:any>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="accounting" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="invoiceRecptId" type="xs:string" />
+						<xs:element name="CostCenterId" maxOccurs="unbounded">
+							<xs:complexType>
+								<xs:simpleContent>
+									<xs:extension base="xs:string">
+										<xs:attribute name="default" type="xs:boolean" use="optional" default="false" />
+									</xs:extension>
+								</xs:simpleContent>
+							</xs:complexType>
+						</xs:element>
+						<xs:element name="ChargeCode" maxOccurs="unbounded">
+							<xs:complexType>
+								<xs:simpleContent>
+									<xs:extension base="xs:string">
+										<xs:attribute name="default" type="xs:boolean" use="optional" default="false" />
+									</xs:extension>
+								</xs:simpleContent>
+							</xs:complexType>
+						</xs:element>
+						<xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded">
+							<xs:annotation>
+								<xs:documentation>additional properties</xs:documentation>
+							</xs:annotation>
+						</xs:any>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="pvpChainedToken" type="pvpTokenType" minOccurs="0" />
+			<xs:element name="pvpExtension" block="extension" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:any namespace="##any" processContents="lax" maxOccurs="unbounded" />
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="version" type="gvVersionType" use="required" />
+		<xs:anyAttribute namespace="##any" processContents="lax" />
+	</xs:complexType>
+	<xs:complexType name="pvpPrincipalType">
+		<xs:sequence>
+			<xs:element name="userId" type="xs:string" />
+			<xs:element name="cn" type="xs:string" />
+			<xs:element name="gvOuId" type="xs:string" />
+			<xs:element name="ou" type="xs:string" />
+			<xs:element name="gvSecClass" type="gvSecClassType" minOccurs="0" />
+			<xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>additional principal attributes</xs:documentation>
+				</xs:annotation>
+			</xs:any>
+		</xs:sequence>
+		<xs:anyAttribute namespace="##any" processContents="lax" />
+	</xs:complexType>
+	<xs:simpleType name="gvSecClassType">
+		<xs:restriction base="xs:integer">
+			<xs:enumeration value="0" />
+			<xs:enumeration value="1" />
+			<xs:enumeration value="2" />
+			<xs:enumeration value="3" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="gvVersionType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="1.0" />
+			<xs:enumeration value="1.1" />
+			<xs:enumeration value="1.2" />
+			<xs:enumeration value="1.8" />
+			<xs:enumeration value="1.9" />
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="logLevelType">
+		<xs:restriction base="xs:integer">
+			<xs:enumeration value="0" />
+			<xs:enumeration value="1" />
+			<xs:enumeration value="2" />
+			<xs:enumeration value="3" />
+			<xs:enumeration value="4" />
+			<xs:enumeration value="5" />
+		</xs:restriction>
+	</xs:simpleType>
+</xs:schema>

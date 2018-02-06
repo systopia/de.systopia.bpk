@@ -43,6 +43,7 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
     );
 
     // add form elements
+    // TODO: Make the form fields longer/larger
     $this->add(
       'text',
       'limit',
@@ -51,16 +52,20 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
     );
 
     $this->add(
-      'text',
-      'key',
-      E::ts('Access Key'),
+        'text',
+        'soap_server_url',
+      E::ts('SOAP-Server-URL'),
+      array("class" => "huge"),
       FALSE
     );
 
+    // TODO: create help message, or remove this part.
+    // this should only be changed if you know what you are doing, and maybe not even then
     $this->add(
         'text',
         'soap_header_namespace',
-      E::ts('SOAP-Namespace'),
+      E::ts('SOAP-Header-Namespace'),
+      array("class" => "huge"),
       FALSE
     );
 
@@ -68,6 +73,7 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
       'text',
       'soap_header_participantId',
       E::ts('SOAP Header participantId'),
+      array("class" => "huge"),
       FALSE
     );
 
@@ -75,6 +81,7 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
       'text',
       'soap_header_userId',
       E::ts('SOAP Header UserId'),
+      array("class" => "huge"),
       FALSE
     );
 
@@ -82,6 +89,7 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
       'text',
       'soap_header_cn',
       E::ts('SOAP Header cn'),
+      array("class" => "huge"),
       FALSE
     );
 
@@ -89,6 +97,7 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
       'text',
       'soap_header_gvOuId',
       E::ts('SOAP Header gvOuId'),
+      array("class" => "huge"),
       FALSE
     );
 
@@ -96,6 +105,7 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
       'text',
       'soap_header_gvGid',
       E::ts('SOAP Header gvGid'),
+      array("class" => "huge"),
       FALSE
     );
 
@@ -103,6 +113,7 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
       'text',
       'soap_header_ou',
       E::ts('SOAP Header ou'),
+      array("class" => "huge"),
       FALSE
     );
 
@@ -136,13 +147,14 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
         'fasttype',
         'fastnr',
         'limit',
-        'key',
+        'soap_server_url',
         'soap_header_namespace',
         'soap_header_participantId',
         'soap_header_userId',
         'soap_header_cn',
         'soap_header_gvOuId',
-        'soap_header_gvGid'
+        'soap_header_gvGid',
+        'soap_header_ou',
       );
   }
 
@@ -151,6 +163,7 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
    */
   public static function getSoapHeaderSettingsParameters() {
     return array(
+      'soap_server_url',
       'soap_header_namespace',
       'soap_header_participantId',
       'soap_header_userId',

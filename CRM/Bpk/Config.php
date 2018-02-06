@@ -23,6 +23,9 @@ class CRM_Bpk_Config {
 
   private static $singleton = NULL;
 
+  // default limit
+  private $limit = 200;
+
   protected $jobs = NULL;
 
   /**
@@ -45,11 +48,21 @@ class CRM_Bpk_Config {
     if (!$settings) {
       // TODO: defaults
       return array(
-        'limit' => 200,
-        'key'   => 'enter key here');
+        'limit'                 => $this->limit,
+        'key'                   => 'enter key here',
+        'soap_header_namespace' => "http://egov.gv.at/pvp1.xsd",
+        'soap_server_url'       => "https://pvawp.bmi.gv.at/bmi.gv.at/soap/SZ2Services/services/SZR");
     } else {
       return $settings;
     }
+  }
+
+  /**
+   * get the default limit for bpk-requests per MINUTE
+   * @return int
+   */
+  public function getDefaultLimit() {
+    return $this->limit;
   }
 
   public function getSoapHeaderSettings() {
@@ -64,6 +77,10 @@ class CRM_Bpk_Config {
       }
     }
     return $settings;
+  }
+
+  public function getTableName() {
+    return CRM_Bpk_CustomData::getGroupTable("bpk");
   }
 
   /**

@@ -28,7 +28,7 @@
     },{
       "_lookup": ["value"],
       "_translate": ["label"],
-      "label": "resolved",
+      "label": "Resolved",
       "value": "3",
       "name": "resolved",
       "filter": "0",
@@ -37,7 +37,7 @@
     },{
       "_lookup": ["value"],
       "_translate": ["label"],
-      "label": "failed - no match",
+      "label": "No Match",
       "value": "4",
       "name": "failed_no_match",
       "filter": "0",
@@ -46,7 +46,7 @@
     },{
       "_lookup": ["value"],
       "_translate": ["label"],
-      "label": "failed - error",
+      "label": "Error",
       "value": "5",
       "name": "failed_error",
       "filter": "0",
@@ -55,7 +55,7 @@
     },{
       "_lookup": ["value"],
       "_translate": ["label"],
-      "label": "failed - ambiguous",
+      "label": "Ambiguous",
       "value": "6",
       "name": "failed_ambiguous",
       "filter": "0",
