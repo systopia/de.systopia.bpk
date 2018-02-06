@@ -43,6 +43,7 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
     );
 
     // add form elements
+    // TODO: Make the form fields longer/larger
     $this->add(
       'text',
       'limit',
@@ -50,13 +51,12 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
       TRUE
     );
 
-    // TODO: not needed?
-//    $this->add(
-//      'text',
-//      'key',
-//      E::ts('Access Key'),
-//      FALSE
-//    );
+    $this->add(
+        'text',
+        'soap_server_url',
+      E::ts('SOAP-Server-URL'),
+      FALSE
+    );
 
     // TODO: create help message, or remove this part.
     // this should only be changed if you know what you are doing, and maybe not even then
@@ -139,7 +139,7 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
         'fasttype',
         'fastnr',
         'limit',
-        'key',
+        'soap_server_url',
         'soap_header_namespace',
         'soap_header_participantId',
         'soap_header_userId',
@@ -155,6 +155,7 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
    */
   public static function getSoapHeaderSettingsParameters() {
     return array(
+      'soap_server_url',
       'soap_header_namespace',
       'soap_header_participantId',
       'soap_header_userId',

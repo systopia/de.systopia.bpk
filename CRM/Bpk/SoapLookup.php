@@ -38,9 +38,11 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
    */
   protected function __construct($params) {
     parent::__construct($params);
+    $config = CRM_Bpk_Config::singleton();
+    $soapHeaderParameters = $config->getSoapHeaderSettings();
 
     // TEST SERVER
-    $this->location = "https://pvawp.bmi.gv.at/at.gv.bmi.szrsrv-b/services/SZR";
+    $this->location = $soapHeaderParameters['soap_server_url'];
     // PRODUCTION SERVER:
     // $this->location = "https://pvawp.bmi.gv.at/bmi.gv.at/soap/SZ2Services/services/SZR";
 
@@ -65,7 +67,7 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
       "location" => $this->location,
       "uri" => $this->uri,
     );
-    // craete Soap-Client Object
+    // create Soap-Client Object
     $this->soapClient = new SoapClient($this->wsdl, $this->soap_options);
     $this->createSoapHeader();
   }
@@ -196,7 +198,7 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
       throw new Exception("Necessary Attributes aren't in array. Aborting transaction", 1);
     }
     $soap_request_data = $this->createSoapBody($contact);
-    $result = array("id"              => $contact->id,
+    $result = array("id"              => $contact->contact_id,
                     "bpk_extern"      => "",
                     "vbpk"            => "",
                     "bpk_status"      => "",
@@ -204,25 +206,13 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
                     "bpk_error_note"  => "",
     );
     try{
-      //    $response = $this->soapClient->GetBPK($this->wsdl, $soap_request_data);
       $response = $this->soapClient->__soapCall("GetBPK", array($soap_request_data));
       $result["bpk_status"]   = "resolved";
       $result['bpk_extern']   = $response->GetBPKReturn;
       $result['vbpk']         = $response->FremdBPK->FremdBPK;
     } catch(SoapFault $fault) {
-      // debug Code
-//      print "\n\nRequest: \n";
-//      print $this->soapClient->__getLastRequest();
+      // TODO: cleanup debug
       error_log("Last Request: " . $this->soapClient->__getLastRequest());
-//      print "\nResponse: \n";
-//      print $this->soapClient->__getLastResponse();
-//      print "\nFault Code: \n";
-//      print $fault->faultcode;
-//      print "\nMessage: \n";
-//      print $fault->getMessage();
-//      print "\nDetail: \n";
-//      print $fault->getTraceAsString();
-//      print "\n";
       error_log("SOAP Exception. FaultCode: " . $fault->faultcode . "; Message: " . $fault->getMessage());
 
       $result_status = explode(":", $fault->faultcode)[1];
@@ -238,11 +228,8 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
       $result['bpk_error_code'] = $fault->faultcode;
       $result['bpk_error_note'] = $fault->getMessage();
     }
-    // TODO: parse response; return array ('contact_id] => array ( ))
-//    print "\n\nBPK: " . $response->GetBPKReturn;
-//    print "\nvBPK: " . $response->FremdBPK->FremdBPK;
 
-
+    error_log("Result: " . json_encode($result));
     return $result;
   }
 
