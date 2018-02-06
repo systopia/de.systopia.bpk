@@ -86,7 +86,7 @@ abstract class CRM_Bpk_Lookup {
       $where_clauses[] = "contact.is_deleted = 0";
 
       // restrict to unset values:
-      $where_clauses[] = "bpk_group.status     IS NULL OR bpk_group.status = 1";
+      $where_clauses[] = "bpk_group.status     IS NULL OR bpk_group.status = 1 OR bpk_group.status = ''";
       $where_clauses[] = "bpk_group.bpk_extern IS NULL OR bpk_group.bpk_extern = ''";
       $where_clauses[] = "bpk_group.vbpk       IS NULL OR bpk_group.vbpk = ''";
 
