@@ -55,6 +55,7 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
         'text',
         'soap_server_url',
       E::ts('SOAP-Server-URL'),
+      array("class" => "huge"),
       FALSE
     );
 
@@ -64,6 +65,7 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
         'text',
         'soap_header_namespace',
       E::ts('SOAP-Header-Namespace'),
+      array("class" => "huge"),
       FALSE
     );
 
@@ -71,6 +73,7 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
       'text',
       'soap_header_participantId',
       E::ts('SOAP Header participantId'),
+      array("class" => "huge"),
       FALSE
     );
 
@@ -78,6 +81,7 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
       'text',
       'soap_header_userId',
       E::ts('SOAP Header UserId'),
+      array("class" => "huge"),
       FALSE
     );
 
@@ -85,6 +89,7 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
       'text',
       'soap_header_cn',
       E::ts('SOAP Header cn'),
+      array("class" => "huge"),
       FALSE
     );
 
@@ -92,6 +97,7 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
       'text',
       'soap_header_gvOuId',
       E::ts('SOAP Header gvOuId'),
+      array("class" => "huge"),
       FALSE
     );
 
@@ -99,6 +105,7 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
       'text',
       'soap_header_gvGid',
       E::ts('SOAP Header gvGid'),
+      array("class" => "huge"),
       FALSE
     );
 
@@ -106,6 +113,7 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
       'text',
       'soap_header_ou',
       E::ts('SOAP Header ou'),
+      array("class" => "huge"),
       FALSE
     );
 

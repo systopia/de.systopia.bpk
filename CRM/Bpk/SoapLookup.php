@@ -41,16 +41,20 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
     $config = CRM_Bpk_Config::singleton();
     $soapHeaderParameters = $config->getSoapHeaderSettings();
 
-    // TEST SERVER
-    $this->location = $soapHeaderParameters['soap_server_url'];
-    // PRODUCTION SERVER:
-    // $this->location = "https://pvawp.bmi.gv.at/bmi.gv.at/soap/SZ2Services/services/SZR";
-
-    // default value; if configured this will be overwritten in createSoapHeader
-    $this->ns = "http://egov.gv.at/pvp1.xsd";
-    $this->wsdl = dirname(__DIR__) . DIRECTORY_SEPARATOR . "../resources/soap/SZR.WSDL";
+    // build SOAP request
+    $this->location   = $soapHeaderParameters['soap_server_url'];
+    $this->ns         = "http://egov.gv.at/pvp1.xsd";
+    $this->wsdl       = dirname(__DIR__) . DIRECTORY_SEPARATOR . "../resources/soap/SZR.WSDL";
     $this->local_cert = dirname(__DIR__) . DIRECTORY_SEPARATOR . "../resources/certs/certificate.pem";
-    $this->pw_file = dirname(__DIR__) . DIRECTORY_SEPARATOR . "../resources/certs/pw.txt";
+    $this->pw_file    = dirname(__DIR__) . DIRECTORY_SEPARATOR . "../resources/certs/pw.txt";
+
+    // make sure the certs are there (otherwise failes w/o proper warning)
+    if (!is_readable($this->local_cert)) {
+      throw new Exception("Cannot read certificate file at 'resources/certs/certificate.pem'.", 1);
+    }
+    if (!is_readable($this->pw_file)) {
+      throw new Exception("Cannot read password file at 'resources/certs/pw.txt'.", 1);
+    }
 
     $file_content= explode("\n", file_get_contents($this->pw_file));
     $this->certificate_password = array_pop(array_reverse($file_content));
@@ -59,13 +63,11 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
       "trace"         => 1,
       "exceptions"    => true,
       "local_cert"    => $this->local_cert,
-      // "context"       => $context,
-      "cache_wsdl" => WSDL_CACHE_NONE,
+      "cache_wsdl"    => WSDL_CACHE_NONE,
       "soap_version"  => SOAP_1_1,
-      //      'use' => SOAP_LITERAL,
       'passphrase'    => $this->certificate_password,
-      "location" => $this->location,
-      "uri" => $this->uri,
+      "location"      => $this->location,
+      "uri"           => $this->uri,
     );
     // create Soap-Client Object
     $this->soapClient = new SoapClient($this->wsdl, $this->soap_options);
@@ -78,10 +80,10 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
   private function createSoapHeader() {
     $config = CRM_Bpk_Config::singleton();
     $soapHeaderParameters = $config->getSoapHeaderSettings();
-    error_log("in createSoapHeader. Parameters: " . json_encode($soapHeaderParameters));
-
     if (isset($soapHeaderParameters['soap_header_namespace'])) {
       $this->ns = $soapHeaderParameters['soap_header_namespace'];
+    } else {
+      throw new Exception("No SOAP header NS set", 1);
     }
 
     $xml = new XMLWriter();
@@ -191,8 +193,7 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
    *               bpk_error_note   error message  (empty string if no error)
    */
   public function getBpkResult($contact) {
-
-    // TODO: setup a single soap request
+    // Make sure the data is there
     if (!isset($contact->first_name) || !isset($contact->last_name) || !isset($contact->birth_date)) {
       throw new Exception("Necessary Attributes aren't in array. Aborting transaction", 1);
     }
@@ -206,29 +207,43 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
     );
     try{
       $response = $this->soapClient->__soapCall("GetBPK", array($soap_request_data));
-      $result["bpk_status"]   = "resolved";
+      $result["bpk_status"]   = 3; //"resolved";
       $result['bpk_extern']   = $response->GetBPKReturn;
       $result['vbpk']         = $response->FremdBPK->FremdBPK;
     } catch(SoapFault $fault) {
-      // TODO: cleanup debug
-      error_log("Last Request: " . $this->soapClient->__getLastRequest());
-      error_log("SOAP Exception. FaultCode: " . $fault->faultcode . "; Message: " . $fault->getMessage());
+      // cleanup debug
+      // error_log("Last Response: " . json_encode($response));
+      // error_log("Last Request: " . $this->soapClient->__getLastRequest());
+      // error_log("SOAP Exception. FaultCode: " . $fault->faultcode . "; Message: " . $fault->getMessage());
 
-      $result_status = explode(":", $fault->faultcode)[1];
+      // analyse failure
+      $faultcodes = explode(":", $fault->faultcode);
+      if (count($faultcodes) < 2) {
+        $result_status = "XXXX"; // internal error
+      } else {
+        $result_status = $faultcodes[1];
+      }
+
       if ($result_status == "F230") {
         // no match
-        $result["bpk_status"]   = "failed_no_match";
-      } else if ($result_status == "F231") {
+        $result['bpk_error_code'] = "F230"; // no match
+        $result['bpk_error_note'] = $fault->getMessage();
+        $result["bpk_status"]     = 4; // "no_match"
+
+      } elseif ($result_status == "F231") {
         // no unique lookup result
-        $result["bpk_status"]   = "failed_ambiguous";
+        $result['bpk_error_code'] = "F231"; // ambiguous
+        $result['bpk_error_note'] = $fault->getMessage();
+        $result["bpk_status"]     = 6; // "failed_ambiguous"
+
       } else {
-        $result["bpk_status"]   = "failed_error";
+        // other error
+        $result['bpk_error_code'] = $result_status;
+        $result['bpk_error_note'] = $fault->getMessage();
+        $result["bpk_status"]     = 5; // "failed_error"
       }
-      $result['bpk_error_code'] = $result_status;
-      $result['bpk_error_note'] = $fault->getMessage();
     }
 
-    error_log("Result: " . json_encode($result));
     return $result;
   }
 
