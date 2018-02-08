@@ -19,7 +19,7 @@
  */
 function civicrm_api3_bpk_lookup($params) {
   $result = CRM_Bpk_Lookup::doSoapLookup($params);
-  return civicrm_api3_create_success("{$result['success']} contacts resolved successfully, {$result['failed']} failures.");
+  return civicrm_api3_create_success("{$result['success']} contacts resolved successfully, {$result['failed']} failures. Contacts (IDs) processed: {$result['contact_ids']}.");
 }
 
 

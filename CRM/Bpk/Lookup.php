@@ -53,7 +53,7 @@ abstract class CRM_Bpk_Lookup {
     return array(
       'success'     => $this->success,
       'failed'      => $this->failed,
-      'contact_ids' => implode(',', $this->contact_ids)
+      'contact_ids' => empty($this->contact_ids) ? 'none' : implode(',', $this->contact_ids)
     );
   }
 
