@@ -57,7 +57,8 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
     }
 
     $file_content= explode("\n", file_get_contents($this->pw_file));
-    $this->certificate_password = array_pop(array_reverse($file_content));
+    $reverse_content = array_reverse($file_content);
+    $this->certificate_password = array_pop($reverse_content);
 
     $this->soap_options = array(
       "trace"         => 1,
@@ -67,7 +68,7 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
       "soap_version"  => SOAP_1_1,
       'passphrase'    => $this->certificate_password,
       "location"      => $this->location,
-      "uri"           => $this->uri,
+      // "uri"           => $this->uri,
     );
     // create Soap-Client Object
     $this->soapClient = new SoapClient($this->wsdl, $this->soap_options);

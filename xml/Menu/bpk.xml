@@ -20,4 +20,10 @@
     <title>SubmissionTab</title>
     <access_arguments>access CiviCRM</access_arguments>
   </item>
+  <item>
+    <path>civicrm/bpk/update</path>
+    <page_callback>CRM_Bpk_Page_UpdateBPK</page_callback>
+    <title>UpdateBPK</title>
+    <access_arguments>access CiviCRM</access_arguments>
+  </item>
 </menu>

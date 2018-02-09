@@ -175,6 +175,22 @@ function bpk_civicrm_tabs(&$tabs, $contactID) {
                    'weight' => 300);
 }
 
+/**
+ * Add a 'update BPK' action
+ */
+function bpk_civicrm_summaryActions( &$actions, $contactID ) {
+  $actions['sepa_contribution'] = array(
+      'title'           => ts('Update BPK'),
+      'weight'          => 50,
+      'ref'             => 'bpk-update',
+      'key'             => 'bpk_update',
+      'component'       => 'CiviContribute',
+      'href'            => CRM_Utils_System::url('civicrm/bpk/update', "cid={$contactID}"),
+      'class'           => 'no-popup',
+      'permissions'     => array('edit all contacts')
+    );
+}
+
 
 /**
  * Implements hook_civicrm_navigationMenu().
@@ -192,3 +208,4 @@ function bpk_civicrm_navigationMenu(&$menu) {
   ));
   _bpk_civix_navigationMenu($menu);
 }
+
