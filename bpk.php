@@ -28,10 +28,17 @@ use CRM_Bpk_ExtensionUtil as E;
  */
 function bpk_civicrm_searchTasks($objectType, &$tasks) {
   if ($objectType == 'contact') {
-    $tasks[] = array(
-        'title' => E::ts('Generate Tax Submission XML'),
-        'class' => 'CRM_Bpk_Form_Task_Submit',
-        'result' => false);
+    if (CRM_Core_Permission::check('edit all contacts')) {
+      $tasks[] = array(
+          'title' => E::ts('Generate Tax Submission XML'),
+          'class' => 'CRM_Bpk_Form_Task_Submit',
+          'result' => false);
+
+      $tasks[] = array(
+          'title' => E::ts('Reset BPKs'),
+          'class' => 'CRM_Bpk_Form_Task_Reset',
+          'result' => false);
+    }
   }
 }
 
@@ -190,7 +197,6 @@ function bpk_civicrm_summaryActions( &$actions, $contactID ) {
       'permissions'     => array('edit all contacts')
     );
 }
-
 
 /**
  * Implements hook_civicrm_navigationMenu().

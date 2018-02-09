@@ -173,7 +173,6 @@ abstract class CRM_Bpk_Lookup {
    * Store result in contact
    */
   protected function storeResult($result) {
-    // TODO: TEST
     $update = array(
       'id'                 => $result['contact_id'],
       'bpk.bpk_extern'     => $result['bpk_extern'],
@@ -182,6 +181,22 @@ abstract class CRM_Bpk_Lookup {
       'bpk.bpk_error_code' => $result['bpk_error_code'],
       'bpk.bpk_error_note' => $result['bpk_error_note'],
       // 'bpk.lookup_date' => date('YmdHis')
+    );
+    CRM_Bpk_CustomData::resolveCustomFields($update);
+    civicrm_api3('Contact', 'create', $update);
+  }
+
+  /**
+   * reset contact's BPK information
+   */
+  public static function resetBPK($contact_id) {
+    $update = array(
+      'id'                 => $contact_id,
+      'bpk.bpk_extern'     => '',
+      'bpk.vbpk'           => '',
+      'bpk.bpk_status'     => 1, // unknown
+      'bpk.bpk_error_code' => '',
+      'bpk.bpk_error_note' => 'reset: ' . date('Y-m-d'),
     );
     CRM_Bpk_CustomData::resolveCustomFields($update);
     civicrm_api3('Contact', 'create', $update);
