@@ -215,3 +215,21 @@ function bpk_civicrm_navigationMenu(&$menu) {
   _bpk_civix_navigationMenu($menu);
 }
 
+/**
+ * Implements hook_civicrm_pageRun().
+ */
+function bpk_civicrm_pageRun(&$page) {
+  $page_name = $page->getVar('_name');
+
+  if ($page_name == 'CRM_Contact_Page_View_Summary') {
+    // add inline button to update BPK to summary view
+    $contact_id = CRM_Utils_Request::retrieve('cid', 'Integer');
+    CRM_Core_Resources::singleton()->addVars('bpk', array(
+      'resolve_url'  => CRM_Utils_System::url('civicrm/bpk/update', "cid={$contact_id}"),
+      'bpk_group_id' => civicrm_api3('CustomGroup', 'getvalue', array('name' => 'bpk', 'return' => 'id'))
+    ));
+
+    CRM_Core_Resources::singleton()->addScriptFile('de.systopia.bpk', 'js/summary_view_button.js');
+  }
+}
+
