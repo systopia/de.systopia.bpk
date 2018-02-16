@@ -290,7 +290,6 @@ class CRM_Bpk_Submission {
         {$bpk_join}
         WHERE {$where_clause}
         GROUP BY civicrm_contribution.contact_id;";
-    // error_log("T1: {$eligible_donation_query}");
     CRM_Core_DAO::executeQuery($eligible_donation_query);
     CRM_Core_DAO::executeQuery("ALTER TABLE `{$eligible_donations}` ADD INDEX `contact_id` (`contact_id`);");
 
@@ -313,7 +312,6 @@ class CRM_Bpk_Submission {
       FROM `civicrm_bmfsa_record`
       WHERE {$where_clause}
       GROUP BY contact_id";
-    // error_log("T2: {$lastsubmission_query}");
     CRM_Core_DAO::executeQuery($lastsubmission_query);
     CRM_Core_DAO::executeQuery("ALTER TABLE `{$last_submission_link}` ADD INDEX `contact_id` (`contact_id`);");
     CRM_Core_DAO::executeQuery("ALTER TABLE `{$last_submission_link}` ADD INDEX `submission_id` (`submission_id`);");
