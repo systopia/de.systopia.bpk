@@ -14,6 +14,8 @@
 | written permission from the original author(s).        |
 +--------------------------------------------------------*/
 
+use CRM_Bpk_ExtensionUtil as E;
+
 /**
  * Class CRM_Bpk_SoapLookup extends Lookup Class
  *
@@ -196,7 +198,7 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
   public function getBpkResult($contact) {
     // Make sure the data is there
     if (!isset($contact->first_name) || !isset($contact->last_name) || !isset($contact->birth_date)) {
-      throw new Exception("Necessary Attributes aren't in array. Aborting transaction", 1);
+      throw new Exception(E::ts("Contact needs at least first name, last name and birthday for bPK lookup."));
     }
     $soap_request_data = $this->createSoapBody($contact);
     $result = array("contact_id"      => $contact->contact_id,
@@ -212,10 +214,6 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
       $result['bpk_extern']   = $response->GetBPKReturn;
       $result['vbpk']         = $response->FremdBPK->FremdBPK;
     } catch(SoapFault $fault) {
-      // cleanup debug
-      // error_log("Last Response: " . json_encode($response));
-      // error_log("Last Request: " . $this->soapClient->__getLastRequest());
-      // error_log("SOAP Exception. FaultCode: " . $fault->faultcode . "; Message: " . $fault->getMessage());
 
       // analyse failure
       $faultcodes = explode(":", $fault->faultcode);
