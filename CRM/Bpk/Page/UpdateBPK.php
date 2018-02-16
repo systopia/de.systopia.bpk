@@ -23,13 +23,17 @@ class CRM_Bpk_Page_UpdateBPK extends CRM_Core_Page {
 
     // run update
     $params = array('contact_id' => $contact_id);
-    $result = CRM_Bpk_Lookup::doSoapLookup($params);
+    try {
+      $result = CRM_Bpk_Lookup::doSoapLookup($params);
 
-    // check result
-    if (empty($result['success'])) {
-      CRM_Core_Session::setStatus(E::ts("BPK update failed."), E::ts('Failed'), 'warn');
-    } else {
-      CRM_Core_Session::setStatus(E::ts("BPK updated."), E::ts('Success'), 'info');
+      // check result
+      if (empty($result['success'])) {
+        CRM_Core_Session::setStatus(E::ts("BPK update failed."), E::ts('Failed'), 'warn');
+      } else {
+        CRM_Core_Session::setStatus(E::ts("BPK updated."), E::ts('Success'), 'info');
+      }
+    } catch (Exception $e) {
+      CRM_Core_Session::setStatus(E::ts("BPK update failed: %1", array(1 => $e->getMessage())), E::ts('Failed'), 'warn');
     }
 
     // in any case: redirect to contact summary

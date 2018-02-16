@@ -217,6 +217,8 @@ function bpk_civicrm_navigationMenu(&$menu) {
 
 /**
  * Implements hook_civicrm_pageRun().
+ *
+ * Injects extra update button into summary view
  */
 function bpk_civicrm_pageRun(&$page) {
   $page_name = $page->getVar('_name');
@@ -233,3 +235,35 @@ function bpk_civicrm_pageRun(&$page) {
   }
 }
 
+/**
+ * Implements hook_civicrm_pre().
+ *
+ * Will make sure that edits to contact/bpks will be
+ *  handled correctly
+ */
+function bpk_civicrm_pre($op, $objectName, $id, &$params) {
+  if ($objectName == 'Individual') {
+    CRM_Bpk_DataLogic::processContactPreHook($op, $id, $params);
+  }
+}
+
+/**
+ * POST hook only used to send pending BPK resets
+ */
+function bpk_civicrm_post($op, $objectName, $objectId, &$objectRef) {
+  if ($objectName == 'Individual') {
+    CRM_Bpk_DataLogic::sendPendingBPKRequests();
+  }
+}
+
+/**
+ * Implements hook_civicrm_pre().
+ *
+ * Will make sure that edits to contact/bpks will be
+ *  handled correctly
+ */
+function bpk_civicrm_custom( $op, $groupID, $entityID, &$params ) {
+  if ($op == 'edit' || $op == 'create') {
+    CRM_Bpk_DataLogic::processCustomHook($op, $groupID, $entityID, $params);
+  }
+}
