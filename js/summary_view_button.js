@@ -13,8 +13,31 @@
 | written permission from the original author(s).        |
 +--------------------------------------------------------*/
 
+// inject data dependency code
+function inject_bpk_data_dependency() {
+  var bpk_data_group        = "#custom-set-content-" + CRM.vars.bpk.bpk_group_id;
+  var bpk_data_dependencies = ["#crm-contactname-content", "#crm-demographic-content"];
+
+  // add data-dependent-fields dependencies
+  for (var i = 0; i < bpk_data_dependencies.length; i++) {
+    var current_value = cj(bpk_data_dependencies[i]).attr('data-dependent-fields');
+    var fields = eval(current_value);
+    if (fields) {
+      if (fields.indexOf(bpk_data_group) == -1) {
+        fields.push(bpk_data_group);
+        cj(bpk_data_dependencies[i]).attr('data-dependent-fields', JSON.stringify(fields));
+      }
+    }
+  }
+}
+
+
 // inject update button
 cj(document).ready(function() {
   cj("div.crm-custom-set-block-" + CRM.vars.bpk.bpk_group_id)
     .prepend('<a href="' + CRM.vars.bpk.resolve_url + '" class="button" title="Resolve"><span><div class="icon refresh-icon ui-icon-refresh"></div></span></a>')
+
+  // also, trigger data dependency function
+  cj(document).bind("ajaxComplete", inject_bpk_data_dependency);
+  inject_bpk_data_dependency();
 });
