@@ -329,6 +329,14 @@ class CRM_Bpk_Submission {
     $config = CRM_Bpk_Config::singleton();
     $year = (int) $year;
 
+    // time span (as defined by BMF)
+    $first_day = $year     . "-01-04";
+    $last_day  = ($year+1) . "-01-03";
+    if ($year == 2017) {
+      // there is an exception for 2017
+      $first_day = $year   . "-01-01";
+    }
+
     // TMP TABLE:
     //  eligible submissions
     $eligible_donations = "tmp_bmf_donations_{$year}";
@@ -336,7 +344,9 @@ class CRM_Bpk_Submission {
 
     // compile where clause
     $where_clauses = $config->getDeductibleContributionWhereClauses();
-    $where_clauses[] = "(YEAR(civicrm_contribution.receive_date) = {$year})"; // select year
+    $where_clauses[] = "(DATE(civicrm_contribution.receive_date) >= DATE('{$first_day}'))";
+    $where_clauses[] = "(DATE(civicrm_contribution.receive_date) <= DATE('{$last_day}'))";
+
     // $where_clauses[] = "(civicrm_contact.is_deleted = 0)"; explicitely DO process trashed contacts (see GP-1334)
     $where_clauses[] = "(civicrm_group_contact.id IS NULL)";   // not member of the excluded groups
     $where_clauses[] = "(LENGTH(bpk.vbpk) = 172)";             // only contacts with valid vbpk (172 characters)

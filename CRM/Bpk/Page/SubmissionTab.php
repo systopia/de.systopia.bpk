@@ -31,16 +31,17 @@ class CRM_Bpk_Page_SubmissionTab extends CRM_Core_Page {
     $annual_donations = array();
     $where_clauses = $config->getDeductibleContributionWhereClauses();
     $where_clauses[] = "(civicrm_contribution.contact_id = %1)";
+    $where_clauses[] = "(YEAR(civicrm_contribution.receive_date) >= 2017)"; //only count since 2017
     $where_clause = implode(' AND ', $where_clauses);
     $query = CRM_Core_DAO::executeQuery("
       SELECT
-        YEAR(civicrm_contribution.receive_date) AS year,
-        SUM(civicrm_contribution.total_amount)  AS amount
+        civicrm_contribution.receive_date       AS receive_date,
+        YEAR(civicrm_contribution.receive_date) AS receive_date,
+        civicrm_contribution.total_amount AS total_amount
       FROM civicrm_contribution
-      WHERE {$where_clause}
-      GROUP BY YEAR(civicrm_contribution.receive_date)
-      ORDER BY YEAR(civicrm_contribution.receive_date);", array(1 => array($contact_id, 'Integer')));
+      WHERE {$where_clause};", array(1 => array($contact_id, 'Integer')));
     while ($query->fetch()) {
+
       $annual_donations[$query->year] = $query->amount;
     }
 
