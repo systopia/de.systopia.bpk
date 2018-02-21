@@ -42,13 +42,6 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
       array("class" => "huge")
     );
 
-    $this->add(
-      'text',
-      'records_per_file',
-      E::ts('Records per File'),
-      TRUE
-    );
-
     // add form elements
     // TODO: Make the form fields longer/larger
     $this->add(
@@ -152,7 +145,6 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
   protected function getSettingsInForm() {
       return array(
         'fasttype',
-        'records_per_file',
         'fastnr',
         'limit',
         'soap_server_url',

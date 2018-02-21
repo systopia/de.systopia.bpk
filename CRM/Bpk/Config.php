@@ -237,14 +237,7 @@ class CRM_Bpk_Config {
    * get the limit of records per XML file
    */
   public function getRecordsPerFile() {
-    $settings = $this->getSettings();
-    $records_per_file = (int) CRM_Utils_Array::value('records_per_file', $settings, '');
-    if ($records_per_file > 0) {
-      return $records_per_file;
-    } else {
-      // fallback
-      return 100000;
-    }
+    return 10000; // as per XSD (https://www.bmf.gv.at/egovernment/fon/fuer-softwarehersteller/UebermittlungSonderausgaben_2.xsd)
   }
 
   /**

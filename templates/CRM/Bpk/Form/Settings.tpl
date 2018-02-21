@@ -28,12 +28,6 @@
         <div class="clear"></div>
     </div>
 
-    <div class="crm-section">
-        <div class="label">{$form.records_per_file.label}</div>
-        <div class="content">{$form.records_per_file.html}</div>
-        <div class="clear"></div>
-    </div>
-
 </div>
 
 <h3>{ts domain='de.systopia.bpk'}Automatic BPK Lookup{/ts}</h3>
