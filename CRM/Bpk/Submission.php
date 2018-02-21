@@ -21,13 +21,15 @@ use CRM_Bpk_ExtensionUtil as E;
  */
 class CRM_Bpk_Submission {
 
-  private static $_cleanupSQLs = array();
+  private static $_cleanupSQLs  = array();
+  private static $_cleanupFiles = array();
 
   protected $submission_id;
   protected $amount;
   protected $reference;
   protected $year;
   protected $type_map;
+  protected $tmp_file;
 
   /**
    * Creates a new submission instance,
@@ -40,6 +42,7 @@ class CRM_Bpk_Submission {
     $this->reference  = $config->generateSubmissionReference();
     $this->amount     = 0.0;
     $this->year       = $year;
+    $this->tmp_file   = NULL;
     $created_by = CRM_Core_Session::getLoggedInContactID();
     if (empty($created_by)) {
       // fallback to avoid errors
@@ -61,6 +64,23 @@ class CRM_Bpk_Submission {
     // finally, store some parameters
     $this->submission_id = CRM_Core_DAO::singleValueQuery("SELECT LAST_INSERT_ID();");
     $this->type_map = array('E' => 1, 'A' => 2, 'S' => 3);
+  }
+
+  /**
+   * get a tmp file to write the XML into
+   */
+  public function getTmpFile() {
+    if ($this->tmp_file === NULL) {
+      $this->tmp_file = tempnam(sys_get_temp_dir(), $this->reference);
+    }
+    return $this->tmp_file;
+  }
+
+  /**
+   * get a proposed file name for the XML file
+   */
+  public function getFileName() {
+    return $this->reference . '.xml';
   }
 
   /**
@@ -117,15 +137,40 @@ class CRM_Bpk_Submission {
     // \Civi\Core\Transaction\Manager::singleton()->dec();
   }
 
+  /**
+   * Wrap up the current submission
+   */
+  public function wrapup($writer, $zip_stream) {
+    // close the document
+    $writer->endElement(); // end SonderausgabenUebermittlung
+    $writer->endDocument();
+    $writer->flush();
+
+    // commit submission
+    $this->commit();
+
+    // add to zip file
+    $zip_stream->addFile($this->getTmpFile(), $this->getFileName());
+
+    // remove file
+    self::$_cleanupFiles[] = $this->getTmpFile();
+  }
+
 
   /**
-   * do some DB cleanup
+   * do some cleanup
    */
   protected static function cleanup() {
+    // clean DB
     foreach (self::$_cleanupSQLs as $cleanupQuery) {
       CRM_Core_DAO::executeQuery($cleanupQuery);
     }
     self::$_cleanupSQLs = array();
+
+    // clean tmp files
+    foreach (self::$_cleanupFiles as $file) {
+      unlink($file);
+    }
   }
 
 
@@ -141,65 +186,87 @@ class CRM_Bpk_Submission {
    *                   "E (Erstübermittlung), A (Änderungsübermittlung) oder S (Stornoübermittlung)"
    */
   protected static function run($sql_query, $year) {
-    $config = CRM_Bpk_Config::singleton();
-    $submission = new CRM_Bpk_Submission($year);
-    $data_pending = TRUE;
+    $config           = CRM_Bpk_Config::singleton();
+    $submission       = NULL;
+    $data_pending     = TRUE;
+    $record_count     = 0;
+    $records_per_file = $config->getRecordsPerFile();
+    $zip_file_name    = "BMF-Submission_" . date('YmdHis') . ".zip";
+    $zip_tmp_file     = tempnam(sys_get_temp_dir(), $zip_file_name);
 
     // FETCH FIRST RECORD
     $data = CRM_Core_DAO::executeQuery($sql_query);
     if (!$data->fetch()) {
       CRM_Core_Session::setStatus(E::ts("No changes to submit."), E::ts('No Changes'), 'info');
+      self::cleanup();
       return;
     }
 
     // WRITE HTML download header
-    header('Content-Type: text/xml');
+    header('Content-Type: application/zip');
     header('Expires: ' . gmdate('D, d M Y H:i:s') . ' GMT');
     $isIE = strstr($_SERVER['HTTP_USER_AGENT'], 'MSIE');
     if ($isIE) {
-      header("Content-Disposition: inline; filename={$submission->reference}.xml");
+      header("Content-Disposition: inline; filename={$zip_file_name}");
       header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
       header('Pragma: public');
     } else {
-      header("Content-Disposition: attachment; filename={$submission->reference}.xml");
+      header("Content-Disposition: attachment; filename={$zip_file_name}");
       header('Pragma: no-cache');
     }
 
-    // write XML header
-    $writer = new XMLWriter();
-    $writer->openURI("php://output");
-    $writer->startDocument();
-    $writer->startElement("SonderausgabenUebermittlung");
-    $writer->writeAttribute('xmlns', 'https://finanzonline.bmf.gv.at/fon/ws/uebermittlungSonderausgaben');
-
-    // WRITE Info_Daten BLOCK
-    $writer->startElement("Info_Daten");
-    $writer->startElement("Fastnr_Fon_Tn");
-    $writer->text($config->getFastnr());
-    $writer->endElement(); // end Fastnr_Fon_Tn
-    $writer->startElement("Fastnr_Org");
-    $writer->text($config->getFastnr());
-    $writer->endElement(); // end Fastnr_Org
-    $writer->endElement(); // end Info_Daten
-
-    // WRITE MessageSpec BLOCK
-    $writer->startElement("MessageSpec");
-    $writer->startElement("MessageRefId");
-    $writer->text($submission->reference);
-    $writer->endElement(); // end MessageRefId
-    $writer->startElement("Timestamp");
-    $writer->text(date('Y-m-d\TH:i:s'));
-    $writer->endElement(); // end Timestamp
-    $writer->startElement("Uebermittlungsart");
-    $writer->text($config->getOrgType());
-    $writer->endElement(); // end Uebermittlungsart
-    $writer->startElement("Zeitraum");
-    $writer->text($year);
-    $writer->endElement(); // end Zeitraum
-    $writer->endElement(); // end MessageSpec
+    // open ZIP output stream
+    $zip_stream = new ZipArchive();
+    if ($zip_stream->open($zip_tmp_file, ZipArchive::CREATE)!==TRUE) {
+      throw new Exception("Cannot open zip output stream", 1);
+    }
 
     // write content
     while ($data_pending) {
+      // first check header stuff
+      if (($record_count % $records_per_file) == 0) {
+        if ($submission) {
+          // first: close last submission
+          $submission->wrapup($writer, $zip_stream);
+        }
+
+        // create new submission
+        $submission = new CRM_Bpk_Submission($year);
+
+        // write XML header
+        $writer = new XMLWriter();
+        $writer->openURI($submission->getTmpFile());
+        $writer->startDocument();
+        $writer->startElement("SonderausgabenUebermittlung");
+        $writer->writeAttribute('xmlns', 'https://finanzonline.bmf.gv.at/fon/ws/uebermittlungSonderausgaben');
+
+        // WRITE Info_Daten BLOCK
+        $writer->startElement("Info_Daten");
+        $writer->startElement("Fastnr_Fon_Tn");
+        $writer->text($config->getFastnr());
+        $writer->endElement(); // end Fastnr_Fon_Tn
+        $writer->startElement("Fastnr_Org");
+        $writer->text($config->getFastnr());
+        $writer->endElement(); // end Fastnr_Org
+        $writer->endElement(); // end Info_Daten
+
+        // WRITE MessageSpec BLOCK
+        $writer->startElement("MessageSpec");
+        $writer->startElement("MessageRefId");
+        $writer->text($submission->reference);
+        $writer->endElement(); // end MessageRefId
+        $writer->startElement("Timestamp");
+        $writer->text(date('Y-m-d\TH:i:s'));
+        $writer->endElement(); // end Timestamp
+        $writer->startElement("Uebermittlungsart");
+        $writer->text($config->getOrgType());
+        $writer->endElement(); // end Uebermittlungsart
+        $writer->startElement("Zeitraum");
+        $writer->text($year);
+        $writer->endElement(); // end Zeitraum
+        $writer->endElement(); // end MessageSpec
+      }
+
       // create a record
       $submission->addEntry($data->contact_id, $data->amount, $data->stype);
 
@@ -222,16 +289,20 @@ class CRM_Bpk_Submission {
       $writer->endElement(); // end Sonderausgaben
 
       // fetch the next record
+      $record_count += 1;
       $data_pending = $data->fetch();
     }
+
+    // close last submission
+    $submission->wrapup($writer, $zip_stream);
+
+    // clean up
     $data->free();
+    $zip_stream->close();
 
-    $writer->endElement(); // end SonderausgabenUebermittlung
-    $writer->endDocument();
-    $writer->flush();
-
-    // write-through the submission
-    $submission->commit();
+    // dump the data
+    readfile($zip_tmp_file);
+    unlink($zip_tmp_file);
 
     // we're done, no return
     self::cleanup();

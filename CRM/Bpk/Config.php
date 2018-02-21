@@ -25,8 +25,10 @@ class CRM_Bpk_Config {
 
   // default limit
   private $limit = 200;
+  private $id_counter = 0;
 
   protected $jobs = NULL;
+
 
   /**
    * get the config instance
@@ -193,8 +195,19 @@ class CRM_Bpk_Config {
    * Generates a unique submission message reference
    */
   public function generateSubmissionReference() {
-    // TODO: implement config?
-    return "GP-" . (int) microtime(TRUE);
+    // TODO: implement config option
+    $reference_base   = 'GP-' . date('ymd') . '-';
+    $counter          = $this->id_counter; // start with the last value
+    $reference_exists = TRUE;
+    while ($reference_exists) {
+      $counter += 1;
+      $proposed_reference = $reference_base . sprintf("%03d", $counter);
+      $reference_exists = CRM_Core_DAO::singleValueQuery("SELECT id FROM `civicrm_bmfsa_submission` WHERE reference = %1",
+                            array(1 => array($proposed_reference, 'String')));
+    }
+
+    $this->id_counter = $counter;
+    return $proposed_reference;
   }
 
   /**
@@ -218,6 +231,20 @@ class CRM_Bpk_Config {
   public function getGrousExcludedFromSubmission() {
     // TODO: implement config?
     return "26";
+  }
+
+  /**
+   * get the limit of records per XML file
+   */
+  public function getRecordsPerFile() {
+    $settings = $this->getSettings();
+    $records_per_file = (int) CRM_Utils_Array::value('records_per_file', $settings, '');
+    if ($records_per_file > 0) {
+      return $records_per_file;
+    } else {
+      // fallback
+      return 100000;
+    }
   }
 
   /**
