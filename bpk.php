@@ -267,3 +267,17 @@ function bpk_civicrm_custom( $op, $groupID, $entityID, &$params ) {
     CRM_Bpk_DataLogic::processCustomHook($op, $groupID, $entityID, $params);
   }
 }
+
+/**
+ * Implements bpk_civicrm_custom()
+ *
+ * A contact merge should *always* move all submission records to the new contact
+ */
+function bpk_civicrm_merge($type, &$data, $mainId = NULL, $otherId = NULL, $tables = NULL) {
+  if ($type == 'sqls') {
+    // add SQL to move bmfsa records
+    if (is_numeric($mainId) && is_numeric($otherId)) {
+      $data[] = "UPDATE `civicrm_bmfsa_record` SET `contact_id` = {$mainId} WHERE `contact_id` = {$otherId};";
+    }
+  }
+}
