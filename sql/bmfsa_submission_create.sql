@@ -36,11 +36,13 @@ CREATE TABLE IF NOT EXISTS `civicrm_bmfsa_record` (
      `submission_id` int unsigned  NOT NULL COMMENT 'the submission this record belongs to',
      `type`               tinyint  NOT NULL COMMENT 'record type: 1=initial, 2=correction, 3=cancellation',
      `contact_id`    int unsigned           COMMENT 'contact this submission is for',
+     `reference`      varchar(23)           COMMENT 'record reference',
      `year`     smallint unsigned  NOT NULL COMMENT 'submission year',
      `amount`       decimal(20,2)  NOT NULL COMMENT 'submitted amount for this contact',
      PRIMARY KEY (`id`),
      INDEX `contact_id` (`contact_id`),
      INDEX `year` (`year`),
      INDEX `submission_id` (`submission_id`),
+     INDEX `reference` (`reference`),
      CONSTRAINT FK_civicrm_bmfsa_record_submission FOREIGN KEY (`submission_id`) REFERENCES `civicrm_bmfsa_submission`(`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci;

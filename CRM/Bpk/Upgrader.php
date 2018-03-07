@@ -44,6 +44,7 @@ class CRM_Bpk_Upgrader extends CRM_Bpk_Upgrader_Base {
    * Make sure to add data stuctures
    */
   public function upgrade_0021() {
+    $this->ctx->log->info('Creating BMFSA submission data structures.');
     $this->executeSqlFile('sql/bmfsa_submission_create.sql');
     return TRUE;
   }
@@ -52,7 +53,30 @@ class CRM_Bpk_Upgrader extends CRM_Bpk_Upgrader_Base {
    * Make sure to add data stuctures
    */
   public function upgrade_0030() {
+    $this->ctx->log->info('Creating BMFSA submission data structures.');
     $this->executeSqlFile('sql/bmfsa_submission_create.sql');
+    return TRUE;
+  }
+
+  /**
+   * Add reference column to bmfsa_record
+   */
+  public function upgrade_0080() {
+    // add column
+    $this->ctx->log->info('Updating BMFSA submission data structures.');
+    $column_exists = CRM_Core_DAO::executeQuery("SHOW COLUMNS FROM `civicrm_bmfsa_record` LIKE 'reference';");
+    if (!$column_exists->fetch()) {
+      // doesn't exist -> add column + index
+      CRM_Core_DAO::executeQuery("ALTER TABLE `civicrm_bmfsa_record` ADD `reference` VARCHAR(23);");
+      CRM_Core_DAO::executeQuery("ALTER TABLE `civicrm_bmfsa_record` ADD INDEX `reference` (`reference`);");
+    }
+
+    // fill (new?) column:
+    CRM_Core_DAO::executeQuery("
+        UPDATE `civicrm_bmfsa_record`
+        SET reference = CONCAT(year, '-', contact_id)
+        WHERE reference IS NULL;");
+
     return TRUE;
   }
 }
