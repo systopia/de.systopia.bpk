@@ -20,7 +20,8 @@
     <tr class="columnheader">
       <td>{ts domain="de.systopia.bpk"}Year{/ts}</td>
       <td>{ts domain="de.systopia.bpk"}Date{/ts}</td>
-      <td>{ts domain="de.systopia.bpk"}Reference{/ts}</td>
+      <td>{ts domain="de.systopia.bpk"}Record{/ts}</td>
+      <td>{ts domain="de.systopia.bpk"}Submission{/ts}</td>
       <td>{ts domain="de.systopia.bpk"}Type{/ts}</td>
       <td>{ts domain="de.systopia.bpk"}Submitted Amount{/ts}</td>
       <td>{ts domain="de.systopia.bpk"}Current Amount{/ts}</td>
@@ -32,6 +33,7 @@
     <tr class="bmfsa-record {$submission.class} {cycle values="odd-row,even-row"}"">
       <td>{$submission.year}</td>
       <td>{$submission.date|crmDate}</td>
+      <td>{$submission.rec_ref}</td>
       <td>{$submission.reference}</td>
       <td>{$submission.type}</td>
       <td>{$submission.amount|crmMoney}</td>

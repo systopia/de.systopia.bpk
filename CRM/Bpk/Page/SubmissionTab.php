@@ -53,6 +53,7 @@ class CRM_Bpk_Page_SubmissionTab extends CRM_Core_Page {
         submission.date      AS date,
         submission.year      AS year,
         record.type          AS type,
+        record.reference     AS rec_ref,
         record.amount        AS amount
       FROM `civicrm_bmfsa_record` record
       LEFT JOIN `civicrm_bmfsa_submission` submission ON submission.id = record.submission_id
@@ -77,6 +78,7 @@ class CRM_Bpk_Page_SubmissionTab extends CRM_Core_Page {
 
       $submissions[] = array(
         'reference' => $query->reference,
+        'rec_ref'   => $query->rec_ref,
         'date'      => $query->date,
         'year'      => $query->year,
         'amount'    => $query->amount,
