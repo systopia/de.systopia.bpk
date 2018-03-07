@@ -26,6 +26,7 @@ class CRM_Bpk_Config {
   // default limit
   private $limit = 200;
   private $id_counter = 0;
+  private $reference_salt = NULL;
 
   protected $jobs = NULL;
 
@@ -215,8 +216,30 @@ class CRM_Bpk_Config {
    *  submission record
    */
   public function generateRecordReference($year, $data) {
-    // TODO: implement config?
-    return "{$year}-{$data->contact_id}";
+    if (empty($data->reference)) {
+      $salt = $this->getRecordReferenceSalt();
+      return "{$year}-" . substr(sha1($salt . $data->bpk), 0, 18);
+    } else {
+      return $data->reference;
+    }
+  }
+
+  /**
+   * get the salt used for the reference generation
+   * from the settings.
+   * when called first, it will be generated
+   */
+  public function getRecordReferenceSalt() {
+    if ($this->reference_salt === NULL) {
+      $settings = $this->getSettings();
+      if (empty($settings['reference_salt'])) {
+        // first time: generate reference salt
+        $settings['reference_salt'] = sha1(CIVICRM_SITE_KEY . microtime());
+        $this->setSettings($settings);
+      }
+      $this->reference_salt = $settings['reference_salt'];
+    }
+    return $this->reference_salt;
   }
 
   /**

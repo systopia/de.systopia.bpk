@@ -85,12 +85,13 @@ class CRM_Bpk_Submission {
 
   /**
    * Add an individual entry
-   *  contact_id  - the donor's contact ID
-   *  amount      - the donor's total amount for that year
-   *  stype       - E, A, or S - from the docs:
-   *                   "E (Erstübermittlung), A (Änderungsübermittlung) oder S (Stornoübermittlung)"
+   *  contact_id        - the donor's contact ID
+   *  amount            - the donor's total amount for that year
+   *  stype             - E, A, or S - from the docs:
+   *                      "E (Erstübermittlung), A (Änderungsübermittlung) oder S (Stornoübermittlung)"
+   *  record_reference  - the generated reference
    */
-  public function addEntry($contact_id, $amount, $stype) {
+  public function addEntry($contact_id, $amount, $stype, $record_reference) {
     // lookup type
     $type = $this->type_map[$stype];
 
@@ -101,13 +102,14 @@ class CRM_Bpk_Submission {
 
     // create submission record
     CRM_Core_DAO::executeQuery("
-        INSERT INTO `civicrm_bmfsa_record` (`submission_id`,`type`,`contact_id`,`year`,`amount`)
-        VALUES (%1, %2, %3, %4, %5);", array(
+        INSERT INTO `civicrm_bmfsa_record` (`submission_id`,`type`,`contact_id`,`year`,`amount`,`reference`)
+        VALUES (%1, %2, %3, %4, %5, %6);", array(
           1 => array($this->submission_id,    'Integer'),
           2 => array($this->type_map[$stype], 'Integer'),
           3 => array($contact_id,             'Integer'),
           4 => array($this->year,             'Integer'),
           5 => array($amount,                 'String'),
+          6 => array($record_reference,       'String'),
         ));
 
     // also: keep track of the total
@@ -268,13 +270,14 @@ class CRM_Bpk_Submission {
       }
 
       // create a record
-      $submission->addEntry($data->contact_id, $data->amount, $data->stype);
+      $record_reference = $config->generateRecordReference($year, $data);
+      $submission->addEntry($data->contact_id, $data->amount, $data->stype, $record_reference);
 
       // WRITE BLOCK "Sonderausgaben"
       $writer->startElement("Sonderausgaben");
       $writer->writeAttribute("Uebermittlungs_Typ", $data->stype);
       $writer->startElement("RefNr");
-      $writer->text($config->generateRecordReference($year, $data));
+      $writer->text($record_reference);
       $writer->endElement(); // end RefNr
       if ($data->stype == 'E' || $data->stype == 'A') {
         $writer->startElement("Betrag");
@@ -344,10 +347,10 @@ class CRM_Bpk_Submission {
     // compile where clause
     $where_clauses = $config->getDeductibleContributionWhereClauses();
     $where_clauses[] = "(YEAR(civicrm_contribution.receive_date) = {$year})"; // select year
-    // $where_clauses[] = "(civicrm_contact.is_deleted = 0)"; explicitely DO process trashed contacts (see GP-1334)
+    $where_clauses[] = "(civicrm_contact.is_deleted = 0)";
     $where_clauses[] = "(civicrm_group_contact.id IS NULL)";   // not member of the excluded groups
     $where_clauses[] = "(LENGTH(bpk.vbpk) = 172)";             // only contacts with valid vbpk (172 characters)
-    $where_clauses[] = "(bpk.status IN (2,3))";                // status 'Resolved' or 'manual'
+    $where_clauses[] = "(bpk.status IN (3,2))";                // status 'Resolved' or 'manual'
     if (!empty($contact_ids)) {
       $contact_id_list = implode(',', $contact_ids);
       $where_clauses[] = "(civicrm_contact.id IN ({$contact_id_list}))";
@@ -387,13 +390,15 @@ class CRM_Bpk_Submission {
       CREATE TABLE `{$last_submission_link}` AS
       SELECT
         contact_id         AS contact_id,
-        MAX(submission_id) AS submission_id
+        MAX(submission_id) AS submission_id,
+        MIN(submission_id) AS first_submission_id
       FROM `civicrm_bmfsa_record`
       WHERE {$where_clause}
       GROUP BY contact_id";
     CRM_Core_DAO::executeQuery($lastsubmission_query);
     CRM_Core_DAO::executeQuery("ALTER TABLE `{$last_submission_link}` ADD INDEX `contact_id` (`contact_id`);");
     CRM_Core_DAO::executeQuery("ALTER TABLE `{$last_submission_link}` ADD INDEX `submission_id` (`submission_id`);");
+    CRM_Core_DAO::executeQuery("ALTER TABLE `{$last_submission_link}` ADD INDEX `first_submission_id` (`first_submission_id`);");
 
     // FINAL QUERY:
     //   all eligible donations that haven't been submitted in this way
@@ -403,12 +408,16 @@ class CRM_Bpk_Submission {
     $sql_query = "
     SELECT
       donation.contact_id                         AS contact_id,
+      first_rec.reference                         AS reference,
       IF(submission.contact_id IS NULL, 'E', 'A') AS stype,
       donation.amount                             AS amount,
+      bpk.bpk_extern                              AS bpk,
       bpk.vbpk                                    AS vbpk
     FROM `{$eligible_donations}` donation
     {$bpk_join1}
     LEFT JOIN `{$last_submission_link}` submission ON submission.contact_id = donation.contact_id
+    LEFT JOIN `civicrm_bmfsa_record`    first_rec  ON submission.contact_id = first_rec.contact_id
+                                                  AND submission.first_submission_id = first_rec.submission_id
     LEFT JOIN `civicrm_bmfsa_record`    record     ON submission.contact_id = record.contact_id
                                                   AND submission.submission_id = record.submission_id
     WHERE (record.amount IS NULL OR donation.amount <> record.amount)
@@ -417,11 +426,15 @@ class CRM_Bpk_Submission {
 
     SELECT
       submission2.contact_id AS contact_id,
+      first_rec2.reference   AS reference,
       'S'                    AS stype,
       record2.amount         AS amount,
+      bpk2.bpk_extern        AS bpk,
       bpk2.vbpk              AS vbpk
     FROM `{$last_submission_link}` submission2
     {$bpk_join2}
+    LEFT JOIN `civicrm_bmfsa_record`    first_rec2  ON submission2.contact_id = first_rec2.contact_id
+                                                   AND submission2.first_submission_id = first_rec2.submission_id
     LEFT JOIN `civicrm_bmfsa_record`    record2     ON submission2.contact_id = record2.contact_id
                                                    AND submission2.submission_id = record2.submission_id
     LEFT JOIN `{$eligible_donations}` donation2     ON donation2.contact_id = submission2.contact_id
