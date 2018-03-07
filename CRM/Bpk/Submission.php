@@ -329,6 +329,13 @@ class CRM_Bpk_Submission {
     $config = CRM_Bpk_Config::singleton();
     $year = (int) $year;
 
+    // run duplicate check
+    $duplicate_count = self::findBPKDuplicates();
+    if ($duplicate_count > 0) {
+      CRM_Core_Session::setStatus(E::ts("There are still %1 duplicates (identical BPK) in the system. Please resolve these first.", array(1 => $duplicate_count)), E::ts('Duplicate BPKs!'), 'warn');
+      return;
+    }
+
     // TMP TABLE:
     //  eligible submissions
     $eligible_donations = "tmp_bmf_donations_{$year}";
@@ -429,5 +436,49 @@ class CRM_Bpk_Submission {
 
     // TODO: drop tables?
     return self::run($sql_query, $year);
+  }
+
+
+  /**
+   * Get a count of the current number of active duplicates by BPK
+   *
+   * @return int number of duplicates found
+   */
+  public static function findBPKDuplicates() {
+    // clear tmp view
+    CRM_Core_DAO::executeQuery("DROP VIEW IF EXISTS tmp_bpk_dupecheck;");
+
+    // compile helper view clauses
+    $config = CRM_Bpk_Config::singleton();
+    $where_clauses = array(); // don't dot this for now: $config->getDeductibleContributionWhereClauses();
+    $where_clauses[] = "(bpk_extern IS NOT NULL)";
+    $where_clauses[] = "(bpk_extern <> '')";
+    $where_clauses[] = "(civicrm_contact.is_deleted = 0)";
+    $where_clauses[] = "(YEAR(civicrm_contribution.receive_date) >= 2017)";
+    $where_clause = implode(' AND ', $where_clauses);
+
+    // create the helper view
+    CRM_Core_DAO::executeQuery("
+      CREATE VIEW tmp_bpk_dupecheck AS
+      SELECT
+        COUNT(civicrm_contribution.id)      AS contributions_since2017,
+        COUNT(DISTINCT(civicrm_contact.id)) AS occurrences
+      FROM civicrm_value_bpk
+      LEFT JOIN civicrm_contact      ON civicrm_contact.id              = civicrm_value_bpk.entity_id
+      LEFT JOIN civicrm_contribution ON civicrm_contribution.contact_id = civicrm_value_bpk.entity_id
+      WHERE {$where_clause}
+      GROUP BY bpk_extern;");
+
+    // evaluate
+    $duplicate_count = CRM_Core_DAO::singleValueQuery("
+      SELECT COUNT(*)
+      FROM tmp_bpk_dupecheck
+      WHERE occurrences > 1
+        AND contributions_since2017 > 0;");
+
+    // clear tmp view
+    CRM_Core_DAO::executeQuery("DROP VIEW IF EXISTS tmp_bpk_dupecheck;");
+
+    return $duplicate_count;
   }
 }
