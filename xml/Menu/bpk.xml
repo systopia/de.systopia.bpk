@@ -32,4 +32,10 @@
     <title>Reset BPKs</title>
     <access_arguments>access CiviCRM</access_arguments>
   </item>
+  <item>
+    <path>civicrm/bpk/resolve</path>
+    <page_callback>CRM_Bpk_Form_Task_Resolve</page_callback>
+    <title>Look up BPKs</title>
+    <access_arguments>access CiviCRM</access_arguments>
+  </item>
 </menu>

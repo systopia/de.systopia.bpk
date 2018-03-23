@@ -38,6 +38,11 @@ function bpk_civicrm_searchTasks($objectType, &$tasks) {
           'title' => E::ts('Reset BPKs'),
           'class' => 'CRM_Bpk_Form_Task_Reset',
           'result' => false);
+
+      $tasks[] = array(
+          'title' => E::ts('Look up BPKs'),
+          'class' => 'CRM_Bpk_Form_Task_Resolve',
+          'result' => false);
     }
   }
 }

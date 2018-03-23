@@ -148,6 +148,7 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
     $xml->startElementNS($def_name, "GetBPK", NULL);
     $xml->writeAttributeNS ("xmlns", $name, NULL, "http://reference.e-government.gv.at/namespace/persondata/20020228#");
       $xml->startElementNS($def_name, "PersonInfo", NULL);
+        // Person data
         $xml->startElementNS($def_name, "Person", NULL);
           $xml->startElementNS($name, "Name", NULL);
             $xml->startElementNS($name, "GivenName", NULL);
@@ -161,6 +162,15 @@ class CRM_Bpk_SoapLookup extends CRM_Bpk_Lookup {
             $xml->Text($contact->birth_date);
           $xml->endElement();
         $xml->endElement();
+
+      if (!empty($contact->postal_code)) {
+        $xml->startElementNS($def_name, "RegularDomicile", NULL);
+          $xml->startElementNS($name, "PostalCode", NULL);
+            $xml->Text($contact->postal_code);
+          $xml->endElement();
+        $xml->endElement();
+      }
+
       $xml->endElement();
       $xml->startElementNS($def_name, "BereichsKennung", NULL);
         $xml->Text("urn:publicid:gv.at:wbpk+XZVR+961128260");
