@@ -347,7 +347,6 @@ class CRM_Bpk_Submission {
     // compile where clause
     $where_clauses = $config->getDeductibleContributionWhereClauses();
     $where_clauses[] = "(YEAR(civicrm_contribution.receive_date) = {$year})"; // select year
-    $where_clauses[] = "(civicrm_contact.is_deleted = 0)";
     $where_clauses[] = "(civicrm_group_contact.id IS NULL)";   // not member of the excluded groups
     $where_clauses[] = "(LENGTH(bpk.vbpk) = 172)";             // only contacts with valid vbpk (172 characters)
     $where_clauses[] = "(bpk.status IN (3,2))";                // status 'Resolved' or 'manual'
