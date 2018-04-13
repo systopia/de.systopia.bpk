@@ -408,7 +408,8 @@ class CRM_Bpk_Submission {
     SELECT
       donation.contact_id                         AS contact_id,
       first_rec.reference                         AS reference,
-      IF(submission.contact_id IS NULL, 'E', 'A') AS stype,
+      IF(record.type IS NULL OR record.type = 3, 'E', 'A')
+                                                  AS stype,
       donation.amount                             AS amount,
       bpk.bpk_extern                              AS bpk,
       bpk.vbpk                                    AS vbpk
