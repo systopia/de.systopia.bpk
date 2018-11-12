@@ -95,6 +95,7 @@ class CRM_Bpk_DataLogic {
       if (self::$reset_recursion) return; // avoid catching own reset
       self::$reset_recursion = TRUE;
       civicrm_api3('Contact', 'create', self::$scheduled_reset);
+      self::$scheduled_reset = NULL;
       self::$reset_recursion = FALSE;
     }
   }
