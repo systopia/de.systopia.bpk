@@ -13,6 +13,19 @@
 | written permission from the original author(s).        |
 +-------------------------------------------------------*}
 
+<h3>{ts domain='de.systopia.bpk'}Eligibility{/ts}</h3>
+
+<div class="crm-section bpk bpk-eligibility">
+    <div id="help">{ts domain='de.systopia.bpk'}Caution: Changing the exclusion groups will have an effect on <strong>all</strong> past and current submissions.{/ts}</div>
+    <div class="crm-section">
+        <div class="label">{$form.exclude_groups.label}</div>
+        <div class="content">{$form.exclude_groups.html}</div>
+        <div class="clear"></div>
+    </div>
+
+</div>
+
+
 <h3>{ts domain='de.systopia.bpk'}Tax Submission{/ts}</h3>
 
 <div class="crm-section bpk bpk-submission">

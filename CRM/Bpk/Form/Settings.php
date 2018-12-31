@@ -27,10 +27,19 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
     CRM_Utils_System::setTitle(E::ts('BPK Extension Settings'));
 
     $this->add(
+        'select',
+        'exclude_groups',
+        E::ts('Exclude the following groups'),
+        $this->getGroups(),
+        FALSE,
+        ['class' => 'crm-select2', 'multiple' => 'multiple']
+    );
+
+    $this->add(
       'text',
       'fastnr',
       E::ts('Finanzamt Steuernummer'),
-      TRUE
+      FALSE
     );
 
     $this->add(
@@ -155,6 +164,7 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
         'soap_header_gvOuId',
         'soap_header_gvGid',
         'soap_header_ou',
+        'exclude_groups'
       );
   }
 
@@ -212,5 +222,14 @@ class CRM_Bpk_Form_Settings extends CRM_Core_Form {
       "ZG" => "[ZG] gemeinnützige Stiftungen (§ 4b EStG, hinsichtlich Zuwendungen zur Vermögensausstattung) SV Spendensammeleinrichtungen karitativ (gem § 4a Abs 2 Z 3 lit a bis c EStG)",
       "ZI" => "[ZI] Zuwendungen an die Innovationsstiftung für Bildung (§ 4c EStG 1988)"
     );
+  }
+
+  protected function getGroups() {
+    $group_list = [];
+    $groups = civicrm_api3('Group', 'get', ['option.limit' => 0, 'return' => 'id,name']);
+    foreach ($groups['values'] as $group) {
+      $group_list[$group['id']] = "{$group['name']} [{$group['id']}]";
+    }
+    return $group_list;
   }
 }

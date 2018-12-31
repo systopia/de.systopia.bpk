@@ -355,7 +355,7 @@ class CRM_Bpk_Submission {
       $where_clauses[] = "(civicrm_contact.id IN ({$contact_id_list}))";
     }
     $where_clause = implode(' AND ', $where_clauses);
-    $excluded_group_ids = $config->getGrousExcludedFromSubmission();
+    $excluded_group_ids = $config->getGroupsExcludedFromSubmission();
 
     CRM_Core_DAO::executeQuery("DROP TABLE IF EXISTS `{$eligible_donations}`;");
     $eligible_donation_query = "

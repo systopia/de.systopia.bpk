@@ -251,9 +251,13 @@ class CRM_Bpk_Config {
    *
    * @return string a csv list of ids
    */
-  public function getGrousExcludedFromSubmission() {
-    // TODO: implement config?
-    return "26";
+  public function getGroupsExcludedFromSubmission() {
+    $settings = $this->getSettings();
+    if (!empty($settings['exclude_groups']) && is_array($settings['exclude_groups'])) {
+      return implode(',', $settings['exclude_groups']);
+    } else {
+      return '0';
+    }
   }
 
   /**
