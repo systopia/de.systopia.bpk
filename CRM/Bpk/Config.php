@@ -173,7 +173,7 @@ class CRM_Bpk_Config {
     $where_clauses = array();
 
     // add NO TEST clause
-    $where_clauses[] = "(({$contribution_table_name}.is_test = 0) | ({$contribution_table_name}.is_test IS NULL))";
+    $where_clauses[] = "(({$contribution_table_name}.is_test = 0) OR ({$contribution_table_name}.is_test IS NULL))";
 
     // add financial types clause
     $financial_types = $this->getDeductibleFinancialTypes();
@@ -281,4 +281,18 @@ class CRM_Bpk_Config {
     return $year_list;
   }
 
+  /**
+   * Get the exclusion activity type or '0' if not found
+   */
+  public static function getExclusionActivityTypeID() {
+    try {
+      return civicrm_api3('OptionValue', 'getvalue', [
+          'return'          => 'value',
+          'option_group_id' => 'activity_type',
+          'name'            => 'bpk_submission_exclusion']);
+    } catch (Exception $ex) {
+      CRM_Core_Error::debug_log_message("BPK: Couldn't find submission exclusion activity type. Error was: " . $ex->getMessage());
+      return '0';
+    }
+  }
 }

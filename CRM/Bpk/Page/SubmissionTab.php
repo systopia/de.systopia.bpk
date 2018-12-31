@@ -152,7 +152,32 @@ class CRM_Bpk_Page_SubmissionTab extends CRM_Core_Page {
    * @return array
    */
   protected function getExcludedYears($contact_id) {
-    // TODO: implement
-    return range(2018,2022);
+    $excluded_years = [];
+    try {
+      $activity_type_id = CRM_Bpk_Config::getExclusionActivityTypeID();
+      $FROM_TO_JOIN = CRM_Bpk_CustomData::createSQLJoin('bpk_submission_exclusion', 'exlusion', 'activity.id');
+      $query_sql = "
+        SELECT bpk_exclusion_from, bpk_exclusion_to
+        FROM civicrm_activity_contact ac
+        LEFT JOIN civicrm_activity activity ON ac.activity_id = activity.id 
+        {$FROM_TO_JOIN}
+        WHERE ac.contact_id = {$contact_id}
+          AND ac.record_type_id = 3
+          AND activity.activity_type_id = {$activity_type_id};";
+      $entry = CRM_Core_DAO::executeQuery($query_sql);
+      while ($entry->fetch()) {
+        $excluded_years = array_merge($excluded_years, range($entry->bpk_exclusion_from, $entry->bpk_exclusion_to));
+      }
+
+      // flatten and sort
+      $excluded_years = array_unique($excluded_years);
+      sort($excluded_years);
+
+    } catch (Exception $ex) {
+      // something didn't work
+      CRM_Core_Error::debug_log_message("Error in BPK exclusion: " . $ex->getMessage());
+    }
+
+    return $excluded_years;
   }
 }
