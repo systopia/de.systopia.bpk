@@ -46,7 +46,16 @@
 {else}
 
 <div id="help">
-{ts domain="de.systopia.bpk"}This contact no recorded submissions to the BMF.{/ts}
+{ts domain="de.systopia.bpk"}This contact has no recorded submissions to the BMF.{/ts}
 </div>
 
 {/if}
+
+<h3>{ts domain="de.systopia.bpk"}Submission Exceptions{/ts}</h3>
+<div class="bmfsa-exclusion-info">
+  <p>{$exclusion_group_status}</p>
+  <p>{$exclusion_activity_status}</p>
+  {if $exclusion_activity_create}
+    <a href="{$exclusion_activity_create}" class="edit button crm-popup" title="{ts domain="de.systopia.bpk"}Add Exclusion{/ts}"><span><div class="icon ui-icon-plus"></div>{ts domain="de.systopia.bpk"}Add Exclusion{/ts}</span></a>
+  {/if}
+</div>
