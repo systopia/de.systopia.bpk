@@ -137,7 +137,8 @@ class CRM_Bpk_Page_SubmissionTab extends CRM_Core_Page {
     }
 
     // FINALLY: add 'create exception' link
-    $this->assign('exclusion_activity_create', CRM_Utils_System::url('civicrm/activity/add', "action=add&reset=1&cid={$contact_id}&atype=108"));
+    $activity_type_id = CRM_Bpk_Config::getExclusionActivityTypeID();
+    $this->assign('exclusion_activity_create', CRM_Utils_System::url('civicrm/activity/add', "action=add&reset=1&cid={$contact_id}&atype={$activity_type_id}"));
 
     // finally: let's add some style...
     CRM_Core_Resources::singleton()->addStyleFile('de.systopia.bpk', 'css/bmfsa.css');
