@@ -156,6 +156,7 @@ class CRM_Bpk_Page_SubmissionTab extends CRM_Core_Page {
     $excluded_years = [];
     try {
       $activity_type_id = CRM_Bpk_Config::getExclusionActivityTypeID();
+      $activity_status_ids = implode(',', CRM_Bpk_Config::getExclusionActivityStatusIDs());
       $FROM_TO_JOIN = CRM_Bpk_CustomData::createSQLJoin('bpk_submission_exclusion', 'exlusion', 'activity.id');
       $query_sql = "
         SELECT bpk_exclusion_from, bpk_exclusion_to
@@ -164,7 +165,8 @@ class CRM_Bpk_Page_SubmissionTab extends CRM_Core_Page {
         {$FROM_TO_JOIN}
         WHERE ac.contact_id = {$contact_id}
           AND ac.record_type_id = 3
-          AND activity.activity_type_id = {$activity_type_id};";
+          AND activity.activity_type_id = {$activity_type_id}
+          AND activity.status_id IN ({$activity_status_ids})";
       $entry = CRM_Core_DAO::executeQuery($query_sql);
       while ($entry->fetch()) {
         $excluded_years = array_merge($excluded_years, range($entry->bpk_exclusion_from, $entry->bpk_exclusion_to));

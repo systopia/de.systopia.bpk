@@ -345,6 +345,7 @@ class CRM_Bpk_Submission {
     $excluded_group_ids = $config->getGroupsExcludedFromSubmission();
     $excl               = CRM_Bpk_CustomData::getGroupTable('bpk_submission_exclusion');
     $exclusion_activity_type_id = CRM_Bpk_Config::getExclusionActivityTypeID();
+    $activity_status_ids = implode(',', CRM_Bpk_Config::getExclusionActivityStatusIDs());
     CRM_Core_DAO::executeQuery("DROP TABLE IF EXISTS `{$excluded_contacts}`;");
     $exclusion_table_query = "
       CREATE TABLE `{$excluded_contacts}` AS
@@ -357,6 +358,7 @@ class CRM_Bpk_Submission {
                                                AND ac.record_type_id = 3
         LEFT JOIN civicrm_activity exclusion  ON exclusion.id = ac.activity_id
                                                AND exclusion.activity_type_id = {$exclusion_activity_type_id}
+                                               AND exclusion.status_id IN ({$activity_status_ids})
         LEFT JOIN {$excl} matching_exclusion  ON matching_exclusion.entity_id = exclusion.id
                                                AND {$year} >= matching_exclusion.bpk_exclusion_from
                                                AND {$year} <= matching_exclusion.bpk_exclusion_to 

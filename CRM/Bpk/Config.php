@@ -295,4 +295,23 @@ class CRM_Bpk_Config {
       return '0';
     }
   }
+
+  /**
+   * Get accepted activity status IDs
+   *
+   * @return array activity status IDs
+   * @throws \CiviCRM_API3_Exception
+   */
+  public static function getExclusionActivityStatusIDs() {
+    $statuses = [];
+    $result = civicrm_api3('OptionValue', 'get', [
+      'return'          => 'value',
+      'option_group_id' => 'activity_status',
+      'name'            => ['IN' => ['Scheduled', 'Completed']]
+    ]);
+    foreach ($result['values'] as $status) {
+      $statuses[] = $status['value'];
+    }
+    return $statuses;
+  }
 }
