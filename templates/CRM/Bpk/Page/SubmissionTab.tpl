@@ -15,7 +15,7 @@
 
 {if $submissions}
 <h3>{ts domain="de.systopia.bpk"}Recorded Submissions{/ts}</h3>
-<table>
+<table class="dataTable">
   <thead>
     <tr class="columnheader">
       <td>{ts domain="de.systopia.bpk"}Year{/ts}</td>
