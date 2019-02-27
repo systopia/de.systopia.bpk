@@ -340,6 +340,36 @@ class CRM_Bpk_Submission {
     }
 
     // TMP TABLE:
+    //  excluded contacts
+    $excluded_contacts  = "tmp_bmf_exclusion_{$year}";
+    $excluded_group_ids = $config->getGroupsExcludedFromSubmission();
+    $excl               = CRM_Bpk_CustomData::getGroupTable('bpk_submission_exclusion');
+    $exclusion_activity_type_id = CRM_Bpk_Config::getExclusionActivityTypeID();
+    $activity_status_ids = implode(',', CRM_Bpk_Config::getExclusionActivityStatusIDs());
+    CRM_Core_DAO::executeQuery("DROP TABLE IF EXISTS `{$excluded_contacts}`;");
+    $exclusion_table_query = "
+      CREATE TABLE `{$excluded_contacts}` AS
+        SELECT contact.id AS contact_id 
+        FROM civicrm_contact contact
+        LEFT JOIN civicrm_group_contact       ON civicrm_group_contact.contact_id = contact.id
+                                               AND civicrm_group_contact.group_id IN ({$excluded_group_ids})
+                                               AND civicrm_group_contact.status = 'Added'
+        LEFT JOIN civicrm_activity_contact ac ON ac.contact_id = contact.id
+                                               AND ac.record_type_id = 3
+        LEFT JOIN civicrm_activity exclusion  ON exclusion.id = ac.activity_id
+                                               AND exclusion.activity_type_id = {$exclusion_activity_type_id}
+                                               AND exclusion.status_id IN ({$activity_status_ids})
+        LEFT JOIN {$excl} matching_exclusion  ON matching_exclusion.entity_id = exclusion.id
+                                               AND {$year} >= matching_exclusion.bpk_exclusion_from
+                                               AND {$year} <= matching_exclusion.bpk_exclusion_to 
+        WHERE matching_exclusion.id IS NOT NULL
+           OR civicrm_group_contact.id IS NOT NULL
+        GROUP BY contact.id;";
+    CRM_Core_DAO::executeQuery($exclusion_table_query);
+    CRM_Core_DAO::executeQuery("ALTER TABLE `{$excluded_contacts}` ADD INDEX `contact_id` (`contact_id`);");
+
+
+    // TMP TABLE:
     //  eligible submissions
     $eligible_donations = "tmp_bmf_donations_{$year}";
     $bpk_join  = CRM_Bpk_CustomData::createSQLJoin('bpk', 'bpk', 'civicrm_contribution.contact_id');
@@ -347,15 +377,14 @@ class CRM_Bpk_Submission {
     // compile where clause
     $where_clauses = $config->getDeductibleContributionWhereClauses();
     $where_clauses[] = "(YEAR(civicrm_contribution.receive_date) = {$year})"; // select year
-    $where_clauses[] = "(civicrm_group_contact.id IS NULL)";   // not member of the excluded groups
-    $where_clauses[] = "(LENGTH(bpk.vbpk) = 172)";             // only contacts with valid vbpk (172 characters)
-    $where_clauses[] = "(bpk.status IN (3,2))";                // status 'Resolved' or 'manual'
+    $where_clauses[] = "(LENGTH(bpk.vbpk) = 172)";                            // only contacts with valid vbpk (172 characters)
+    $where_clauses[] = "(bpk.status IN (3,2))";                               // status 'Resolved' or 'manual'
+    $where_clauses[] = "(excluded.contact_id IS NULL)";                       // there is active exclusion for this contact
     if (!empty($contact_ids)) {
       $contact_id_list = implode(',', $contact_ids);
       $where_clauses[] = "(civicrm_contact.id IN ({$contact_id_list}))";
     }
     $where_clause = implode(' AND ', $where_clauses);
-    $excluded_group_ids = $config->getGrousExcludedFromSubmission();
 
     CRM_Core_DAO::executeQuery("DROP TABLE IF EXISTS `{$eligible_donations}`;");
     $eligible_donation_query = "
@@ -364,10 +393,8 @@ class CRM_Bpk_Submission {
           civicrm_contribution.contact_id AS contact_id,
           SUM(total_amount)               AS amount
         FROM civicrm_contribution
-        LEFT JOIN civicrm_contact       ON civicrm_contact.id = civicrm_contribution.contact_id
-        LEFT JOIN civicrm_group_contact ON civicrm_group_contact.contact_id = civicrm_contribution.contact_id
-                                        AND civicrm_group_contact.group_id IN ({$excluded_group_ids})
-                                        AND civicrm_group_contact.status = 'Added'
+        LEFT JOIN civicrm_contact               ON civicrm_contact.id = civicrm_contribution.contact_id
+        LEFT JOIN {$excluded_contacts} excluded ON excluded.contact_id = civicrm_contact.id
         {$bpk_join}
         WHERE {$where_clause}
         GROUP BY civicrm_contribution.contact_id;";
@@ -446,8 +473,8 @@ class CRM_Bpk_Submission {
     // add cleanup
     self::$_cleanupSQLs[] = "DROP TABLE IF EXISTS `{$last_submission_link}`;";
     self::$_cleanupSQLs[] = "DROP TABLE IF EXISTS `{$eligible_donations}`;";
+    self::$_cleanupSQLs[] = "DROP TABLE IF EXISTS `{$excluded_contacts}`;";
 
-    // TODO: drop tables?
     return self::run($sql_query, $year);
   }
 

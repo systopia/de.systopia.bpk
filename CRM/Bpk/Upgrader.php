@@ -79,4 +79,18 @@ class CRM_Bpk_Upgrader extends CRM_Bpk_Upgrader_Base {
 
     return TRUE;
   }
+
+  /**
+   * Add reference column to bmfsa_record
+   */
+  public function upgrade_0090() {
+    // add column
+    $this->ctx->log->info('Adding submission exclusion activity.');
+
+    $customData = new CRM_Bpk_CustomData('de.systopia.bpk');
+    $customData->syncOptionGroup(__DIR__ . '/../../resources/bpk_exclusion_activity_type.json');
+    $customData->syncCustomGroup(__DIR__ . '/../../resources/bpk_exclusion_custom_field.json');
+
+    return TRUE;
+  }
 }

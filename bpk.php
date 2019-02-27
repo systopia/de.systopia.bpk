@@ -106,6 +106,8 @@ function bpk_civicrm_enable() {
   $customData->syncOptionGroup(__DIR__ . '/resources/bpk_error_code_option_group.json');
   $customData->syncOptionGroup(__DIR__ . '/resources/bpk_status_option_group.json');
   $customData->syncCustomGroup(__DIR__ . '/resources/bpk_custom_group.json');
+  $customData->syncOptionGroup(__DIR__ . '/resources/bpk_exclusion_activity_type.json');
+  $customData->syncCustomGroup(__DIR__ . '/resources/bpk_exclusion_custom_field.json');
 }
 
 /**
