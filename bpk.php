@@ -54,6 +54,9 @@ function bpk_civicrm_searchTasks($objectType, &$tasks) {
  */
 function bpk_civicrm_config(&$config) {
   _bpk_civix_civicrm_config($config);
+
+  require_once 'CRM/Xdedupe/Resolver/BPKSubscriber.php';
+  \Civi::dispatcher()->addSubscriber(new CRM_Xdedupe_Resolver_BPKSubscriber());
 }
 
 /**

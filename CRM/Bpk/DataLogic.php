@@ -31,6 +31,14 @@ define('BPK_STATUS_AMBIG',    6);
  */
 class CRM_Bpk_DataLogic {
 
+  // also declare the statuses as constants
+  const STATUS_UNKNOWN  = BPK_STATUS_UNKNOWN;
+  const STATUS_MANUAL   = BPK_STATUS_MANUAL;
+  const STATUS_RESOLVED = BPK_STATUS_RESOLVED;
+  const STATUS_NOMATCH  = BPK_STATUS_NOMATCH;
+  const STATUS_ERROR    = BPK_STATUS_ERROR;
+  const STATUS_AMBIG    = BPK_STATUS_AMBIG;
+
   protected static $bpk_group_id    = NULL;
   protected static $recursion       = FALSE;
   protected static $reset_recursion = FALSE;
