@@ -41,6 +41,15 @@ class CRM_Xdedupe_Resolver_BPKResolver extends CRM_Xdedupe_Resolver {
   }
 
   /**
+   * Report the contact attributes that this resolver requires
+   *
+   * @return array list of contact attributes
+   */
+  public function getContactAttributes() {
+    return ['first_name', 'last_name', 'birth_date'];
+  }
+
+  /**
    * Check if one of the contacts has a valid BPK record. If so, make sure this record ends up with the
    *  main contact, and set the contact's first_name, last_name and birth_date to that of the BPK contact
    *
@@ -63,25 +72,64 @@ class CRM_Xdedupe_Resolver_BPKResolver extends CRM_Xdedupe_Resolver {
 
     if (count($contacts_with_valid_bpks) == 1) {
       # ONLY _one_ of the contacts has a valid BPK record => we can act
-      $contact_with_valid_bpk = reset($contacts_with_valid_bpks);
+      $contact_id_with_valid_bpk = reset($contacts_with_valid_bpks);
 
       // delete all other records
       foreach ($all_contact_ids as $contact_id) {
-        if ($contact_id != $contact_with_valid_bpk) {
+        if ($contact_id != $contact_id_with_valid_bpk) {
           $this->deleteBPKRecord($contact_id);
         }
       }
 
       // move record to main contact
-      $this->moveBPKRecord($contact_with_valid_bpk, $main_contact_id);
+      $this->moveBPKRecord($contact_id_with_valid_bpk, $main_contact_id);
 
       // set vBPK to main contact
       if (!empty($main_contact_vBPK)) {
         $this->setVBPK($main_contact_id, $main_contact_vBPK);
       }
+
+      // update first name, last name and birth date
+      $this->copyVerifiedContactData($contact_id_with_valid_bpk, $main_contact_id);
     }
 
     return count($contacts_with_valid_bpks) > 0;
+  }
+
+
+  /**
+   * Copy first name, last_name and birth date from the first contact to the second
+   * @param $from_contact_id integer contact ID
+   * @param $to_contact_id   integer contact ID
+   */
+  protected function copyVerifiedContactData($from_contact_id, $to_contact_id) {
+    $contact_update = [];
+    $from_contact = $this->getContext()->getContact($from_contact_id);
+    $to_contact   = $this->getContext()->getContact($to_contact_id);
+
+    // find the differences
+    foreach (['first_name', 'last_name', 'birth_date'] as $attribute) {
+      if ($from_contact[$attribute] != $to_contact[$attribute]) {
+        $contact_update[$attribute] = $from_contact[$attribute];
+      }
+    }
+
+    if (!empty($contact_update)) {
+      // there are differences
+      $this->addMergeDetail(E::ts("Attributes %1 copied from BPK record holder contact [%2]", [
+          1 => implode(',', array_keys($contact_update)),
+          2 => $from_contact_id]));
+
+      // run the update
+      $contact_update['id'] = $to_contact_id;
+      if (isset($contact_update['birth_date'])) {
+        $contact_update['birth_date'] = date('Y-m-d', strtotime($contact_update['birth_date']));
+      }
+      civicrm_api3('Contact', 'create', $contact_update);
+
+      // purge cache
+      $this->getContext()->unloadContact($to_contact_id);
+    }
   }
 
 
@@ -133,9 +181,13 @@ class CRM_Xdedupe_Resolver_BPKResolver extends CRM_Xdedupe_Resolver {
   protected function moveBPKRecord($contact_id_old, $contact_id_new) {
     $contact_id_old = (int) $contact_id_old;
     $contact_id_new = (int) $contact_id_new;
-    $config = CRM_Bpk_Config::singleton();
-    $table_name = $config->getTableName();
-    CRM_Core_DAO::executeQuery("UPDATE {$table_name} SET entity_id = {$contact_id_new} WHERE entity_id = {$contact_id_old}");
+    if ($contact_id_old != $contact_id_new) {
+      $config = CRM_Bpk_Config::singleton();
+      $table_name = $config->getTableName();
+      CRM_Core_DAO::executeQuery("UPDATE {$table_name} SET entity_id = {$contact_id_new} WHERE entity_id = {$contact_id_old}");
+      $this->addMergeDetail(E::ts("Moved BPK record from contact [%1]", [
+          1 => $contact_id_old]));
+    }
   }
 
   /**
@@ -175,9 +227,16 @@ class CRM_Xdedupe_Resolver_BPKResolver extends CRM_Xdedupe_Resolver {
       throw new Exception("vBPK field not found!");
     }
     if ($contact_id) {
-      civicrm_api3('Contact', 'create', [
-          'id'        => $contact_id,
-          $vBPK_field => $value]);
+      $old_value = self::getVBPK($contact_id);
+      if ($old_value != $value) {
+        civicrm_api3('Contact', 'create', [
+            'id'        => $contact_id,
+            $vBPK_field => $value]);
+        if ($old_value) {
+          $this->addMergeDetail(E::ts("vPBK '%1' from transferred BPK dropped in favour of main contact's onw one.", [
+              1 => $old_value]));
+        }
+      }
     }
   }
 }
