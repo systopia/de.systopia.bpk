@@ -81,16 +81,19 @@ class CRM_Xdedupe_Resolver_BPKResolver extends CRM_Xdedupe_Resolver {
         }
       }
 
-      // move record to main contact
+      // update first name, last name and birth date
+      $this->copyVerifiedContactData($contact_id_with_valid_bpk, $main_contact_id);
+
+      // the last step has created a new record
+      $this->deleteBPKRecord($main_contact_id);
+
+      // now move record to main contact
       $this->moveBPKRecord($contact_id_with_valid_bpk, $main_contact_id);
 
       // set vBPK to main contact
       if (!empty($main_contact_vBPK)) {
         $this->setVBPK($main_contact_id, $main_contact_vBPK);
       }
-
-      // update first name, last name and birth date
-      $this->copyVerifiedContactData($contact_id_with_valid_bpk, $main_contact_id);
     }
 
     return count($contacts_with_valid_bpks) > 0;
@@ -233,7 +236,7 @@ class CRM_Xdedupe_Resolver_BPKResolver extends CRM_Xdedupe_Resolver {
             'id'        => $contact_id,
             $vBPK_field => $value]);
         if ($old_value) {
-          $this->addMergeDetail(E::ts("vPBK '%1' from transferred BPK dropped in favour of main contact's onw one.", [
+          $this->addMergeDetail(E::ts("vPBK '%1' from transferred BPK dropped in favour of main contact's own one.", [
               1 => $old_value]));
         }
       }
