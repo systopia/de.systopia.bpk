@@ -37,7 +37,7 @@ class CRM_Xdedupe_Resolver_BPKResolver extends CRM_Xdedupe_Resolver {
    * @return string name
    */
   public function getHelp() {
-    return E::ts("If there is a valid BPK with (exactly) one of the contacts, that contact's first name, last name and birth date will be copied to the main contact. In addition, that BPK record will, of course, be moved to the main contact. The vBPK of the main contact, however, will be kept if set.");
+    return E::ts("If there is a valid BPK with one of the contacts, that contact's first name, last name and birth date will be copied to all other contacts. In addition, that BPK record will, of course, be moved to the main contact. The vBPK of the main contact, however, will be kept if set. Caution: don't use with other resolvers working on those fields, as they might invalidate the BPK records.");
   }
 
   /**
