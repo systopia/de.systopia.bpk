@@ -63,40 +63,44 @@ class CRM_Xdedupe_Resolver_BPKResolver extends CRM_Xdedupe_Resolver {
   public function resolve($main_contact_id, $other_contact_ids) {
     $all_contact_ids = array_merge($other_contact_ids, [$main_contact_id]);
     $main_contact_vBPK = $this->getVBPK($main_contact_id);
-    $contacts_with_valid_bpks = $this->getContactsWithValidBPKRecords($all_contact_ids);
+    $valid_bpk_records = $this->getValidBPKRecords($all_contact_ids);
 
-    // we can't merge multiple valid BPKs
-    if (count($contacts_with_valid_bpks) > 1) {
-      throw new Exception("Cannot merge multiple valid BPKs");
+    // abort if conflicting BPKs are used
+    if ($this->hasDifferentBPKRecords($valid_bpk_records)) {
+      throw new Exception("Cannot merge conflicting BPKs");
     }
 
-    if (count($contacts_with_valid_bpks) == 1) {
-      # ONLY _one_ of the contacts has a valid BPK record => we can act
-      $contact_id_with_valid_bpk = reset($contacts_with_valid_bpks);
+    // ONLY _one_ of the contacts has a valid BPK record => we can act
+    if (count($valid_bpk_records) > 0) {
+      // if main contact has a valid BPK, prefer that contact
+      $contact_id_with_valid_bpk = isset($valid_bpk_records[$main_contact_id]) ? $main_contact_id : reset(array_keys($valid_bpk_records));
 
-      // delete all other records
+      // delete all other records and
+      // set first name, last name and birth date to the one with the BPK
+      // to makes sure we can merge without conflicts
       foreach ($all_contact_ids as $contact_id) {
         if ($contact_id != $contact_id_with_valid_bpk) {
+          // update first name, last name and birth date
+          $this->copyVerifiedContactData($contact_id_with_valid_bpk, $contact_id);
+
+          // and delete the record
           $this->deleteBPKRecord($contact_id);
         }
       }
 
-      // update first name, last name and birth date
-      $this->copyVerifiedContactData($contact_id_with_valid_bpk, $main_contact_id);
+      // now move everything to the main contact (if it isn't already)
+      if ($main_contact_id != $contact_id_with_valid_bpk) {
+        // now move record to main contact
+        $this->moveBPKRecord($contact_id_with_valid_bpk, $main_contact_id);
 
-      // the last step has created a new record
-      $this->deleteBPKRecord($main_contact_id);
-
-      // now move record to main contact
-      $this->moveBPKRecord($contact_id_with_valid_bpk, $main_contact_id);
-
-      // set vBPK to main contact
-      if (!empty($main_contact_vBPK)) {
-        $this->setVBPK($main_contact_id, $main_contact_vBPK);
+        // set vBPK to main contact
+        if (!empty($main_contact_vBPK)) {
+          $this->setVBPK($main_contact_id, $main_contact_vBPK);
+        }
       }
     }
 
-    return count($contacts_with_valid_bpks) > 0;
+    return count($valid_bpk_records) > 0;
   }
 
 
@@ -106,6 +110,8 @@ class CRM_Xdedupe_Resolver_BPKResolver extends CRM_Xdedupe_Resolver {
    * @param $to_contact_id   integer contact ID
    */
   protected function copyVerifiedContactData($from_contact_id, $to_contact_id) {
+    if ($from_contact_id == $to_contact_id) return;
+
     $contact_update = [];
     $from_contact = $this->getContext()->getContact($from_contact_id);
     $to_contact   = $this->getContext()->getContact($to_contact_id);
@@ -144,9 +150,10 @@ class CRM_Xdedupe_Resolver_BPKResolver extends CRM_Xdedupe_Resolver {
    * @return array contact IDs
    * @throws Exception|CiviCRM_API3_Exception if bpk_status field not found or loading failed
    */
-  protected function getContactsWithValidBPKRecords($contact_ids) {
+  protected function getValidBPKRecords($contact_ids) {
     $status_field = CRM_Bpk_CustomData::getCustomFieldKey('bpk', 'bpk_status');
-    if (!$status_field) {
+    $bpk_field    = CRM_Bpk_CustomData::getCustomFieldKey('bpk', 'bpk_extern');
+    if (!$status_field || !$bpk_field) {
       throw new Exception("bpk_status field not found!");
     }
 
@@ -155,12 +162,34 @@ class CRM_Xdedupe_Resolver_BPKResolver extends CRM_Xdedupe_Resolver {
         'id'           => ['IN' => $contact_ids],
         $status_field  => ['IN' => [CRM_Bpk_DataLogic::STATUS_MANUAL, CRM_Bpk_DataLogic::STATUS_RESOLVED]],
         'option.limit' => 0,
-        'return'       => 'id',
         'sequential'   => 0,
+        'return'       => "id,{$bpk_field}",
     ]);
 
     // return only the contact IDs with valid BPKs
-    return array_keys($query['values']);
+    return $query['values'];
+  }
+
+  /**
+   * Check if there is different valid BPKs in the list.
+   *
+   * @param $all_records array contact+bpk data
+   * @return boolean TRUE if there are different BPKs in the data set
+   */
+  protected function hasDifferentBPKRecords($all_records) {
+    $bpk_field = CRM_Bpk_CustomData::getCustomFieldKey('bpk', 'bpk_extern');
+    $known_value = NULL;
+    foreach ($all_records as $record) {
+      $value = CRM_Utils_Array::value($bpk_field, $record);
+      if ($known_value === NULL) {
+        $known_value = $value;
+      } else {
+        if ($known_value != $value) {
+          return TRUE;
+        }
+      }
+    }
+    return FALSE;
   }
 
   /**
