@@ -49,7 +49,7 @@ class CRM_Bpk_DataLogicTest extends \PHPUnit_Framework_TestCase implements Headl
       ]);
 
       $expected = [
-        CRM_Bpk_CustomData::getCustomFieldKey('bpk', 'bpk_status') => BPK_STATUS_UNKNOWN,
+        `CRM_Bpk_CustomData::getCustomFieldKey('bpk', 'bpk_status') => BPK_STATUS_UNKNOWN,`
         CRM_Bpk_CustomData::getCustomFieldKey('bpk', 'bpk_extern') => '',
         CRM_Bpk_CustomData::getCustomFieldKey('bpk', 'vbpk') => '',
         CRM_Bpk_CustomData::getCustomFieldKey('bpk', 'bpk_error_code') => '',
