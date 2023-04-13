@@ -19,7 +19,7 @@ use CRM_Bpk_ExtensionUtil as E;
 /**
  * Collection of upgrade steps.
  */
-class CRM_Bpk_Upgrader extends CRM_Bpk_Upgrader_Base {
+class CRM_Bpk_Upgrader extends CRM_Extension_Upgrader_Base {
 
   /**
    * Install data stuctures
